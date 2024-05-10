@@ -1,0 +1,54 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "display-elements-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/displayElements/DisplayElementsWebPart.js",
+          "manifest": "./src/webparts/displayElements/DisplayElementsWebPart.manifest.json"
+        }
+      ]
+    },
+    "filter-webpart-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/filterWebpart/FilterWebpartWebPart.js",
+          "manifest": "./src/webparts/filterWebpart/FilterWebpartWebPart.manifest.json"
+        }
+      ]
+    },
+    "buttons-webpart-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/buttonsWebpart/ButtonsWebpartWebPart.js",
+          "manifest": "./src/webparts/buttonsWebpart/ButtonsWebpartWebPart.manifest.json"
+        }
+      ]
+    },
+    "results-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/results/ResultsWebPart.js",
+          "manifest": "./src/webparts/results/ResultsWebPart.manifest.json"
+        }
+      ]
+    },
+    "uni-data-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/uniData/UniDataWebPart.js",
+          "manifest": "./src/webparts/uniData/UniDataWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "DisplayElementsWebPartStrings": "lib/webparts/displayElements/loc/{locale}.js",
+    "FilterWebpartWebPartStrings": "lib/webparts/filterWebpart/loc/{locale}.js",
+    "ButtonsWebpartWebPartStrings": "lib/webparts/buttonsWebpart/loc/{locale}.js",
+    "ResultsWebPartStrings": "lib/webparts/results/loc/{locale}.js",
+    "UniDataWebPartStrings": "lib/webparts/uniData/loc/{locale}.js"
+  }
+}
