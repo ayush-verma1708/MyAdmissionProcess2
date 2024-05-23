@@ -267,7 +267,7 @@ export default class DisplayElements extends React.Component<
 
         <div className="results">
           <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>All Item</div>
+            <div className={styles.fieldLabel}>All Items</div>
             <div id="allItems"></div>
           </div>
         </div>
@@ -319,82 +319,248 @@ export default class DisplayElements extends React.Component<
     this.setState({ score: event.target.value });
   };
 
+
   private getShortlistedItems = async () => {
+    this.undoRead();
+  
     try {
-      // Fetch items from the Shortlisted list
-      const items: any[] = await this._sp.web.lists
-        .getByTitle("Shortlisted")
-        .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+        // Fetch items from the Shortlisted list
+        const items: any[] = await this._sp.web.lists
+            .getByTitle("Shortlisted")
+            .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
 
-      // Get the current user's title (assuming you have access to it)
-      const user = await this._sp.web.currentUser();
-      const currentUserTitle = user.Title; // Replace with the actual current user's title
+        // Get the current user's title (assuming you have access to it)
+        const user = await this._sp.web.currentUser();
+        const currentUserTitle = user.Title; // Replace with the actual current user's title
 
-      // Generate HTML for the table
-      let html = `
-<table>
-<tr>
-  <th>Title</th>
-  <th>University</th>
-  <th>Action</th>
-</tr>`;
+        // Generate HTML for the table
+        let html = `<div class="tiles-container">`;
 
-      items.forEach((item) => {
-        // Check if the item's Username matches the current user's title
-        if (item.username === currentUserTitle) {
-          html += `
-<tr>
-  <td>${item.Title}</td>
-  <td>${item.University}</td>
-  <td>
-    <button class="delete-button" data-id="${item.ID}">Delete</button>
-    <button class="apply-button" data-id="${item.ID}">Apply</button>
-  </td>
-</tr>`;
+        let rowCounter = 0; // Counter to keep track of tiles in a row
+        items.forEach((item) => {
+            if (item.username === currentUserTitle) {
+                // Check if a new row should be started
+                if (rowCounter % 3 === 0) {
+                    if (rowCounter !== 0) {
+                        html += `</div>`; // Close the previous row
+                    }
+                    html += `<div class="tiles-row">`; // Start a new row
+                }
+
+                html += `
+    <div class="tile">
+      <div class="tile-header">
+        <h2>${item.University}</h2> <!-- University name as heading -->
+      </div>
+      <div class="tile-content">
+        <p>${item.Title}</p>
+      </div>
+      <div class="tile-footer">
+        <button class="delete-button" data-id="${item.ID}">Delete</button>
+        <button class="apply-button" data-id="${item.ID}">Apply</button>
+      </div>
+    </div>`;
+                rowCounter++;
+            }
+        });
+
+        html += `</div>`; // Close the last row
+
+        // Display the table inside the specified <div>
+        const allItemsElement = document.getElementById("allItems");
+        if (allItemsElement) {
+            allItemsElement.innerHTML = html;
+
+            // Add event listeners to delete and apply buttons
+            document.querySelectorAll(".delete-button").forEach((button) => {
+                button.addEventListener("click", async (event) => {
+                    const target = event.target as HTMLElement;
+                    const id = target.dataset.id;
+                    if (id) {
+                        await this.deleteItemFromShortlist(id);
+                        alert("Item Deleted!");
+                    } else {
+                        console.error("ID is missing or undefined from button dataset.");
+                    }
+                });
+            });
+
+            document.querySelectorAll(".apply-button").forEach((button) => {
+                button.addEventListener("click", async (event) => {
+                    const target = event.target as HTMLElement;
+                    const id = target.dataset.id;
+                    if (id) {
+                        await this.applyItem(id);
+                        alert("Item Applied!");
+                    } else {
+                        console.error("ID is missing or undefined from button dataset.");
+                    }
+                });
+            });
+        } else {
+            console.error("Element with id 'allItems' not found.");
         }
-      });
-
-      html += `</table>`;
-
-      // Display the table inside the specified <div>
-      const allItemsElement = document.getElementById("allItems");
-      if (allItemsElement) {
-        allItemsElement.innerHTML = html;
-
-        // Add event listeners to delete and apply buttons
-        document.querySelectorAll(".delete-button").forEach((button) => {
-          button.addEventListener("click", async (event) => {
-            const target = event.target as HTMLElement;
-            const id = target.dataset.id;
-            if (id) {
-              await this.deleteItemFromShortlist(id);
-              alert("Item Deleted!");
-            } else {
-              console.error("ID is missing or undefined from button dataset.");
-            }
-          });
-        });
-
-        document.querySelectorAll(".apply-button").forEach((button) => {
-          button.addEventListener("click", async (event) => {
-            const target = event.target as HTMLElement;
-            const id = target.dataset.id;
-            if (id) {
-              await this.applyItem(id);
-              alert("Item Applied!");
-            } else {
-              console.error("ID is missing or undefined from button dataset.");
-            }
-          });
-        });
-      } else {
-        console.error("Element with id 'allItems' not found.");
-      }
     } catch (error) {
-      console.error("Error fetching shortlisted items:", error);
-      // Optionally, display an error message or handle the error in another way
+        console.error("Error fetching shortlisted items:", error);
+        // Optionally, display an error message or handle the error in another way
     }
-  };
+};
+
+
+
+    // Working tiles 
+    
+//   private getShortlistedItems = async () => {
+//     try {
+//       // Fetch items from the Shortlisted list
+//       const items: any[] = await this._sp.web.lists
+//         .getByTitle("Shortlisted")
+//         .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+
+//       // Get the current user's title (assuming you have access to it)
+//       const user = await this._sp.web.currentUser();
+//       const currentUserTitle = user.Title; // Replace with the actual current user's title
+
+//       // Generate HTML for the table
+//       let html = `<div class="tiles-container">`;
+
+// items.forEach((item) => {
+//   if (item.username === currentUserTitle) {
+//     html += `
+// <div class="tile">
+//   <div class="tile-content">
+//     <h3>${item.Title}</h3>
+//     <p>${item.University}</p>
+//   </div>
+//   <div class="tile-actions">
+//     <button class="delete-button" data-id="${item.ID}">Delete</button>
+//     <button class="apply-button" data-id="${item.ID}">Apply</button>
+//   </div>
+// </div>`;
+//   }
+// });
+
+// html += `</div>`;
+
+
+//       // Display the table inside the specified <div>
+//       const allItemsElement = document.getElementById("allItems");
+//       if (allItemsElement) {
+//         allItemsElement.innerHTML = html;
+
+//         // Add event listeners to delete and apply buttons
+//         document.querySelectorAll(".delete-button").forEach((button) => {
+//           button.addEventListener("click", async (event) => {
+//             const target = event.target as HTMLElement;
+//             const id = target.dataset.id;
+//             if (id) {
+//               await this.deleteItemFromShortlist(id);
+//               alert("Item Deleted!");
+//             } else {
+//               console.error("ID is missing or undefined from button dataset.");
+//             }
+//           });
+//         });
+
+//         document.querySelectorAll(".apply-button").forEach((button) => {
+//           button.addEventListener("click", async (event) => {
+//             const target = event.target as HTMLElement;
+//             const id = target.dataset.id;
+//             if (id) {
+//               await this.applyItem(id);
+//               alert("Item Applied!");
+//             } else {
+//               console.error("ID is missing or undefined from button dataset.");
+//             }
+//           });
+//         });
+//       } else {
+//         console.error("Element with id 'allItems' not found.");
+//       }
+//     } catch (error) {
+//       console.error("Error fetching shortlisted items:", error);
+//       // Optionally, display an error message or handle the error in another way
+//     }
+//   };
+
+  // Working table
+
+//   private getShortlistedItems = async () => {
+//     try {
+//       // Fetch items from the Shortlisted list
+//       const items: any[] = await this._sp.web.lists
+//         .getByTitle("Shortlisted")
+//         .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+
+//       // Get the current user's title (assuming you have access to it)
+//       const user = await this._sp.web.currentUser();
+//       const currentUserTitle = user.Title; // Replace with the actual current user's title
+
+//       // Generate HTML for the table
+//       let html = `
+// <table>
+// <tr>
+//   <th>Title</th>
+//   <th>University</th>
+//   <th>Action</th>
+// </tr>`;
+
+//       items.forEach((item) => {
+//         // Check if the item's Username matches the current user's title
+//         if (item.username === currentUserTitle) {
+//           html += `
+// <tr>
+//   <td>${item.Title}</td>
+//   <td>${item.University}</td>
+//   <td>
+//     <button class="delete-button" data-id="${item.ID}">Delete</button>
+//     <button class="apply-button" data-id="${item.ID}">Apply</button>
+//   </td>
+// </tr>`;
+//         }
+//       });
+
+//       html += `</table>`;
+
+//       // Display the table inside the specified <div>
+//       const allItemsElement = document.getElementById("allItems");
+//       if (allItemsElement) {
+//         allItemsElement.innerHTML = html;
+
+//         // Add event listeners to delete and apply buttons
+//         document.querySelectorAll(".delete-button").forEach((button) => {
+//           button.addEventListener("click", async (event) => {
+//             const target = event.target as HTMLElement;
+//             const id = target.dataset.id;
+//             if (id) {
+//               await this.deleteItemFromShortlist(id);
+//               alert("Item Deleted!");
+//             } else {
+//               console.error("ID is missing or undefined from button dataset.");
+//             }
+//           });
+//         });
+
+//         document.querySelectorAll(".apply-button").forEach((button) => {
+//           button.addEventListener("click", async (event) => {
+//             const target = event.target as HTMLElement;
+//             const id = target.dataset.id;
+//             if (id) {
+//               await this.applyItem(id);
+//               alert("Item Applied!");
+//             } else {
+//               console.error("ID is missing or undefined from button dataset.");
+//             }
+//           });
+//         });
+//       } else {
+//         console.error("Element with id 'allItems' not found.");
+//       }
+//     } catch (error) {
+//       console.error("Error fetching shortlisted items:", error);
+//       // Optionally, display an error message or handle the error in another way
+//     }
+//   };
 
   private applyItem = async (id: string) => {
     try {
