@@ -36,6 +36,8 @@ interface IFilterWebpartState {
   selectedTestType: string;
   score: string;
   convertedSATScore: number | null;
+  currentPage: number;
+  itemsPerPage: number;
 }
 
 export default class FilterWebpart extends React.Component<
@@ -64,13 +66,15 @@ export default class FilterWebpart extends React.Component<
       selectedTestType: "",
       score: "",
       convertedSATScore: null,
+      currentPage: 1,
+      itemsPerPage: 9,
     };
     this._sp = getSP();
   }
 
   public componentDidMount() {
     this.fetchCountriesFromSharePointList();
-    this.getAllItems();
+    this.getAllItems(1, 9);
     $(document).ready(() => {
       $(".country-select").select2(); // Apply select2 to the Country dropdown (if available
       $(".city-select").select2(); // Apply select2 to the City dropdown
@@ -79,6 +83,7 @@ export default class FilterWebpart extends React.Component<
     });
   }
 
+  //@ts-ignore
   private convertScoreToSAT = () => {
     const score = parseFloat(this.state.score);
     if (!isNaN(score)) {
@@ -128,280 +133,147 @@ export default class FilterWebpart extends React.Component<
   public render(): React.ReactElement<IFilterWebpartProps> {
     return (
       <div className={styles.spfxCrudPnp}>
-        <div className="Filters">
-          <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>Test Type</div>
-            <select
-              value={this.state.selectedTestType}
-              onChange={this.handleTestTypeChange}
-            >
-              <option value="">Select Test Type</option>
-              <option value="SAT">SAT</option>
-              <option value="GRE">GRE</option>
-              <option value="TOEFL">TOEFL</option>
-              <option value="IELTS">IELTS</option>
-              <option value="ACT">ACT</option>
-            </select>
+        <div className={styles.filtersContainer}>
+          <div className={styles.filterRow}>
+            <div className={styles.itemField}>
+              <label className={styles.fieldLabel}>Test Type</label>
+              <select value={this.state.selectedTestType} onChange={this.handleTestTypeChange} className={styles.selectInput}>
+                <option value="">Select Test Type</option>
+                <option value="SAT">SAT</option>
+                <option value="GRE">GRE</option>
+                <option value="TOEFL">TOEFL</option>
+                <option value="IELTS">IELTS</option>
+                <option value="ACT">ACT</option>
+              </select>
+            </div>
+            <div className={styles.itemField}>
+              <label className={styles.fieldLabel}>Score</label>
+              <input type="text" value={this.state.score} onChange={this.handleScoreChange} className={styles.textInput} />
+            </div>
           </div>
-          <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>Score</div>
-            <input
-              type="text"
-              value={this.state.score}
-              onChange={this.handleScoreChange}
-            />
-          </div>
-          <div className={styles.itemField}>
-            <div className={styles.fieldLabel}></div>
-            <button onClick={this.convertScoreToSAT}>Submit Score</button>
+          
+          <div className={styles.filterRow}>
+            <button onClick={this.convertScoreToSAT} className={styles.actionButton}>Submit Score</button>
             {this.state.convertedSATScore !== null && (
-              <div style={{ color: "red" }}>
+              <div className={styles.convertedScore}>
                 Equivalent SAT score: {this.state.convertedSATScore}
               </div>
             )}
           </div>
-
-          <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>Country</div>
-            <select
-              value={this.state.selectedCountry}
-              onChange={this.handleCountryChange}
-            >
-              <option value="">Select Country</option>
-              {this.state.countries.map((country) => (
-                <option key={country.ID} value={country.Title}>
-                  {country.Title}
-                </option>
-              ))}
-            </select>
+  
+          <div className={styles.filterRow}>
+            <div className={styles.itemField}>
+              <label className={styles.fieldLabel}>Country</label>
+              <select value={this.state.selectedCountry} onChange={this.handleCountryChange} className={styles.selectInput}>
+                <option value="">Select Country</option>
+                {this.state.countries.map((country) => (
+                  <option key={country.ID} value={country.Title}>{country.Title}</option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.itemField}>
+              <label className={styles.fieldLabel}>City</label>
+              <select value={this.state.selectedCity} onChange={this.handleCityChange} className={styles.selectInput}>
+                <option value="">Select City</option>
+                {this.state.cities.map((city) => (
+                  <option key={city.ID} value={city.Title}>{city.Title}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>City</div>
-            <select
-              value={this.state.selectedCity}
-              onChange={this.handleCityChange}
-            >
-              <option value="">Select City</option>
-              {this.state.cities.map((city) => (
-                <option key={city.ID} value={city.Title}>
-                  {city.Title}
-                </option>
-              ))}
-            </select>
+  
+          <div className={styles.filterRow}>
+            <div className={styles.itemField}>
+              <label className={styles.fieldLabel}>University</label>
+              <select value={this.state.selectedUniversity} onChange={this.handleUniversityChange} className={styles.selectInput}>
+                <option value="">Select University</option>
+                {this.state.universities.map((university) => (
+                  <option key={university.ID} value={university.Title}>{university.Title}</option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.itemField}>
+              <label className={styles.fieldLabel}>Program</label>
+              <select value={this.state.selectedProgram} onChange={this.handleProgramChange} className={styles.selectInput}>
+                <option value="">Select Program</option>
+                {this.state.programs.map((program) => (
+                  <option key={program.ID} value={program.Title}>{program.Title}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>University</div>
-
-            <select
-              value={this.state.selectedUniversity}
-              onChange={this.handleUniversityChange}
-            >
-              <option value="">Select University</option>
-              {this.state.universities.map((university) => (
-                <option key={university.ID} value={university.Title}>
-                  {university.Title}
-                </option>
-              ))}
-            </select>
+  
+          <div className={styles.filterRow}>
+            <div className={styles.itemField}>
+              <label className={styles.fieldLabel}>Expense</label>
+              <select value={this.state.selectedExpense} onChange={this.handleExpenseChange} className={styles.selectInput}>
+                <option value="">Select Expense</option>
+                <option value="100k<">Less Than 100k</option>
+                <option value="100k<200k">Between 100k and 200k</option>
+                <option value="200k<">More than 200k</option>
+              </select>
+            </div>
+            <div className={styles.itemField}>
+              <label className={styles.fieldLabel}>University Type</label>
+              <select value={this.state.selectedUniversityType} onChange={this.handleUniversityTypeChange} className={styles.selectInput}>
+                <option value="">Select University Type</option>
+                <option value="Public">Public</option>
+                <option value="Private">Private</option>
+              </select>
+            </div>
           </div>
-          <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>Program</div>
-
-            <select
-              value={this.state.selectedProgram}
-              onChange={this.handleProgramChange}
-            >
-              <option value="">Select Program</option>
-              {this.state.programs.map((program) => (
-                <option key={program.ID} value={program.Title}>
-                  {program.Title}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>Expense</div>
-            <select
-              value={this.state.selectedExpense}
-              onChange={this.handleExpenseChange}
-            >
-              <option value="">Select Expense</option>
-              <option value="100k<">Less Than 100k</option>
-              <option value="100k<200k">Between 100k and 200k</option>
-              <option value="200k<">More than 200k</option>
-            </select>
-          </div>
-          <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>University Type</div>
-            <select
-              value={this.state.selectedUniversityType}
-              onChange={this.handleUniversityTypeChange}
-            >
-              <option value="">Select University Type</option>
-              <option value="Public">Public</option>
-              <option value="Private">Private</option>
-            </select>
-          </div>
-          <div className={styles.itemField}>
-            <label>
+  
+          <div className={styles.filterRow}>
+            <div className={styles.checkboxField}>
               <input
                 type="checkbox"
+                className={styles.checkbox}
                 checked={this.state.includeIvyLeague}
                 onChange={this.handleIvyLeagueChange}
               />
-              Include Ivy Leagues
-            </label>
-          </div>
-
-          <div className={styles.itemField}>
-            <label>
+              <label className={styles.checkboxLabel}>Include Ivy Leagues</label>
+            </div>
+            <div className={styles.checkboxField}>
               <input
                 type="checkbox"
+                className={styles.checkbox}
                 checked={this.state.STEMcourse}
                 onChange={this.handleSTEMcourseChange}
               />
-              Has STEM Course
-            </label>
+              <label className={styles.checkboxLabel}>Has STEM Course</label>
+            </div>
           </div>
         </div>
-
-        {/* <div className="results">
-          <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>All Item</div>
-            <div id="allItems"></div>
-          </div>
-        </div> */}
-
-        <div className="buttons">
-          <div className={styles.buttonSection}>
-            <div className={styles.button}>
-              <span className={styles.label} onClick={this.getAllItems}>
-                Search
-              </span>
-            </div>
-            <div className={styles.button}>
-              <span className={styles.label} onClick={this.undoRead}>
-                Undo Read
-              </span>
-            </div>
-
-            {/* <div className={styles.button}>
-              <span className={styles.label} onClick={this.getUniInfo}>
-                getUniInfo
-              </span>
-            </div>
-            <div className={styles.button}>
-              <span className={styles.label} onClick={this.getProgInfo}>
-                getProgInfo
-              </span>
-            </div> */}
-
-            <div className={styles.button}>
-              <span
-                className={styles.fieldLabel}
-                onClick={this.getShortlistedItems}
-              >
-                My Lists
-              </span>
-            </div>
-          </div>
+  
+        <div className={styles.buttonsContainer}>
+          <button className={styles.actionButton} onClick={() => this.getAllItems(1, 9)}>Search</button>
+          <button className={styles.actionButton} onClick={this.getShortlistedItems}>My Lists</button>
         </div>
       </div>
     );
   }
+  
+
+  
   private handleTestTypeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     this.setState({ selectedTestType: event.target.value });
   };
 
+  //@ts-ignore
   private handleScoreChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ score: event.target.value });
   };
 
-//   private getShortlistedItems = async () => {
-//     try {
-//       // Fetch items from the Shortlisted list
-//       const items: any[] = await this._sp.web.lists
-//         .getByTitle("Shortlisted")
-//         .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
 
-//       // Get the current user's title (assuming you have access to it)
-//       const user = await this._sp.web.currentUser();
-//       const currentUserTitle = user.Title; // Replace with the actual current user's title
-
-//       // Generate HTML for the table
-//       let html = `
-// <table>
-// <tr>
-//   <th>Title</th>
-//   <th>University</th>
-//   <th>Action</th>
-// </tr>`;
-
-//       items.forEach((item) => {
-//         // Check if the item's Username matches the current user's title
-//         if (item.username === currentUserTitle) {
-//           html += `
-// <tr>
-//   <td>${item.Title}</td>
-//   <td>${item.University}</td>
-//   <td>
-//     <button class="delete-button" data-id="${item.ID}">Delete</button>
-//     <button class="apply-button" data-id="${item.ID}">Apply</button>
-//   </td>
-// </tr>`;
-//         }
-//       });
-
-//       html += `</table>`;
-
-//       // Display the table inside the specified <div>
-//       const allItemsElement = document.getElementById("allItems");
-//       if (allItemsElement) {
-//         allItemsElement.innerHTML = html;
-
-//         // Add event listeners to delete and apply buttons
-//         document.querySelectorAll(".delete-button").forEach((button) => {
-//           button.addEventListener("click", async (event) => {
-//             const target = event.target as HTMLElement;
-//             const id = target.dataset.id;
-//             if (id) {
-//               await this.deleteItemFromShortlist(id);
-//               alert("Item Deleted!");
-//             } else {
-//               console.error("ID is missing or undefined from button dataset.");
-//             }
-//           });
-//         });
-
-//         document.querySelectorAll(".apply-button").forEach((button) => {
-//           button.addEventListener("click", async (event) => {
-//             const target = event.target as HTMLElement;
-//             const id = target.dataset.id;
-//             if (id) {
-//               await this.applyItem(id);
-//               alert("Item Applied!");
-//             } else {
-//               console.error("ID is missing or undefined from button dataset.");
-//             }
-//           });
-//         });
-//       } else {
-//         console.error("Element with id 'allItems' not found.");
-//       }
-//     } catch (error) {
-//       console.error("Error fetching shortlisted items:", error);
-//       // Optionally, display an error message or handle the error in another way
-//     }
-//   };
-private getShortlistedItems = async () => {
-  this.undoRead();
+  private getShortlistedItems = async () => {
+    this.undoRead();
     try {
       // Fetch items from the Shortlisted list
       const items: any[] = await this._sp.web.lists
-          .getByTitle("Shortlisted")
-          .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+        .getByTitle("Shortlisted")
+        .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
 
       // Get the current user's title (assuming you have access to it)
       const user = await this._sp.web.currentUser();
@@ -412,16 +284,16 @@ private getShortlistedItems = async () => {
 
       let rowCounter = 0; // Counter to keep track of tiles in a row
       items.forEach((item) => {
-          if (item.username === currentUserTitle) {
-              // Check if a new row should be started
-              if (rowCounter % 3 === 0) {
-                  if (rowCounter !== 0) {
-                      html += `</div>`; // Close the previous row
-                  }
-                  html += `<div class="tiles-row">`; // Start a new row
-              }
+        if (item.username === currentUserTitle) {
+          // Check if a new row should be started
+          if (rowCounter % 3 === 0) {
+            if (rowCounter !== 0) {
+              html += `</div>`; // Close the previous row
+            }
+            html += `<div class="tiles-row">`; // Start a new row
+          }
 
-              html += `
+          html += `
   <div class="tile">
     <div class="tile-header">
       <h2>${item.University}</h2> <!-- University name as heading -->
@@ -434,8 +306,8 @@ private getShortlistedItems = async () => {
       <button class="apply-button" data-id="${item.ID}">Apply</button>
     </div>
   </div>`;
-              rowCounter++;
-          }
+          rowCounter++;
+        }
       });
 
       html += `</div>`; // Close the last row
@@ -443,114 +315,43 @@ private getShortlistedItems = async () => {
       // Display the table inside the specified <div>
       const allItemsElement = document.getElementById("allItems");
       if (allItemsElement) {
-          allItemsElement.innerHTML = html;
+        allItemsElement.innerHTML = html;
 
-          // Add event listeners to delete and apply buttons
-          document.querySelectorAll(".delete-button").forEach((button) => {
-              button.addEventListener("click", async (event) => {
-                  const target = event.target as HTMLElement;
-                  const id = target.dataset.id;
-                  if (id) {
-                      await this.deleteItemFromShortlist(id);
-                      alert("Item Deleted!");
-                  } else {
-                      console.error("ID is missing or undefined from button dataset.");
-                  }
-              });
+        // Add event listeners to delete and apply buttons
+        document.querySelectorAll(".delete-button").forEach((button) => {
+          button.addEventListener("click", async (event) => {
+            const target = event.target as HTMLElement;
+            const id = target.dataset.id;
+            if (id) {
+              await this.deleteItemFromShortlist(id);
+              alert("Item Deleted!");
+            } else {
+              console.error("ID is missing or undefined from button dataset.");
+            }
           });
+        });
 
-          document.querySelectorAll(".apply-button").forEach((button) => {
-              button.addEventListener("click", async (event) => {
-                  const target = event.target as HTMLElement;
-                  const id = target.dataset.id;
-                  if (id) {
-                      await this.applyItem(id);
-                      alert("Item Applied!");
-                  } else {
-                      console.error("ID is missing or undefined from button dataset.");
-                  }
-              });
+        document.querySelectorAll(".apply-button").forEach((button) => {
+          button.addEventListener("click", async (event) => {
+            const target = event.target as HTMLElement;
+            const id = target.dataset.id;
+            if (id) {
+              await this.applyItem(id);
+              alert("Item Applied!");
+            } else {
+              console.error("ID is missing or undefined from button dataset.");
+            }
           });
+        });
       } else {
-          console.error("Element with id 'allItems' not found.");
+        console.error("Element with id 'allItems' not found.");
       }
-  } catch (error) {
+    } catch (error) {
       console.error("Error fetching shortlisted items:", error);
       // Optionally, display an error message or handle the error in another way
-  }
-};
-// private getShortlistedItems = async () => {
-//   try {
-//     // Fetch items from the Shortlisted list
-//     const items: any[] = await this._sp.web.lists
-//       .getByTitle("Shortlisted")
-//       .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+    }
+  };
 
-//     // Get the current user's title (assuming you have access to it)
-//     const user = await this._sp.web.currentUser();
-//     const currentUserTitle = user.Title; // Replace with the actual current user's title
-
-//     // Generate HTML for the table
-//     let html = `<div class="tiles-container">`;
-
-// items.forEach((item) => {
-// if (item.username === currentUserTitle) {
-//   html += `
-// <div class="tile">
-// <div class="tile-content">
-//   <h3>${item.Title}</h3>
-//   <p>${item.University}</p>
-// </div>
-// <div class="tile-actions">
-//   <button class="delete-button" data-id="${item.ID}">Delete</button>
-//   <button class="apply-button" data-id="${item.ID}">Apply</button>
-// </div>
-// </div>`;
-// }
-// });
-
-// html += `</div>`;
-
-
-//     // Display the table inside the specified <div>
-//     const allItemsElement = document.getElementById("allItems");
-//     if (allItemsElement) {
-//       allItemsElement.innerHTML = html;
-
-//       // Add event listeners to delete and apply buttons
-//       document.querySelectorAll(".delete-button").forEach((button) => {
-//         button.addEventListener("click", async (event) => {
-//           const target = event.target as HTMLElement;
-//           const id = target.dataset.id;
-//           if (id) {
-//             await this.deleteItemFromShortlist(id);
-//             alert("Item Deleted!");
-//           } else {
-//             console.error("ID is missing or undefined from button dataset.");
-//           }
-//         });
-//       });
-
-//       document.querySelectorAll(".apply-button").forEach((button) => {
-//         button.addEventListener("click", async (event) => {
-//           const target = event.target as HTMLElement;
-//           const id = target.dataset.id;
-//           if (id) {
-//             await this.applyItem(id);
-//             alert("Item Applied!");
-//           } else {
-//             console.error("ID is missing or undefined from button dataset.");
-//           }
-//         });
-//       });
-//     } else {
-//       console.error("Element with id 'allItems' not found.");
-//     }
-//   } catch (error) {
-//     console.error("Error fetching shortlisted items:", error);
-//     // Optionally, display an error message or handle the error in another way
-//   }
-// };
 
   private applyItem = async (id: string) => {
     try {
@@ -591,27 +392,35 @@ private getShortlistedItems = async () => {
     }
   };
 
-  handleExpenseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  private handleExpenseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     this.setState({ selectedExpense: event.target.value });
+    this.undoRead();
+    this.getAllItems(1, 9);
   };
 
+  //@ts-ignore
   private handleIvyLeagueChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     this.setState({ includeIvyLeague: event.target.checked }, () => {
       // After updating the state, re-render the filtered items
-      this.getAllItems();
+      this.getAllItems(1, 9);
       console.log("Include Ivy League:", this.state.includeIvyLeague);
     });
+    this.undoRead();
+    this.getAllItems(1, 9);
   };
 
+  //@ts-ignore
   private handleSTEMcourseChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     this.setState({ STEMcourse: event.target.checked }, () => {
-      this.getAllItems();
+      this.getAllItems(1, 9);
       console.log("Has STEM Course:", this.state.STEMcourse);
     });
+    this.undoRead();
+    this.getAllItems(1, 9);
   };
 
   private async fetchCountriesFromSharePointList() {
@@ -660,7 +469,7 @@ private getShortlistedItems = async () => {
       console.error("Error fetching programs from SharePoint:", error);
     }
   }
-
+  //@ts-ignore
   private handleCountryChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
@@ -678,7 +487,7 @@ private getShortlistedItems = async () => {
       this.fetchCitiesFromSharePointList();
     }
   };
-
+  //@ts-ignore
   private handleCityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCity = event.target.value;
     this.setState({
@@ -692,7 +501,7 @@ private getShortlistedItems = async () => {
       this.fetchUniversitiesFromSharePointList(selectedCity);
     }
   };
-
+  //@ts-ignore
   private handleUniversityChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
@@ -702,45 +511,21 @@ private getShortlistedItems = async () => {
       this.fetchProgramsFromSharePointList(selectedUniversity);
     }
   };
+  //@ts-ignore
   private handleUniversityTypeChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     this.setState({ selectedUniversityType: e.target.value });
+    this.undoRead();
+    this.getAllItems(1, 9);
   };
-
+  //@ts-ignore
   private handleProgramChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     this.setState({ selectedProgram: event.target.value });
   };
 
-  // private shortlistCourse = async () => {
-  //   try {
-  //     const { selectedUniversity, selectedProgram } = this.state;
-  //     let program = selectedProgram || ""; // If no program selected, use blank value
-  //     if (!selectedUniversity) {
-  //       alert("Please select a University before shortlisting.");
-  //       return;
-  //     }
-
-  //     // Get the current user
-  //     const user = await this._sp.web.currentUser();
-  //     console.log(`Current user: ${user.Title}`);
-
-  //     // Add the item to the "Favourites" list with the titles and IDs
-  //     await this._sp.web.lists.getByTitle("Favourites").items.add({
-  //       Title: `Shortlisted ${selectedUniversity} - ${program}`,
-  //       University: selectedUniversity,
-  //       Program: program,
-  //       username: user.Title, // Add the user's title to the item
-  //     });
-
-  //     alert("Course has been successfully shortlisted!");
-  //   } catch (error) {
-  //     console.error("Error shortlisting course:", error);
-  //     alert("An error occurred while shortlisting the course.");
-  //   }
-  // };
 
   private getCurrentDate = () => {
     const date = new Date();
@@ -774,8 +559,8 @@ private getShortlistedItems = async () => {
     }
   };
 
-  // Filter By public and private
-  private getAllItems = async () => {
+
+  private getAllItems = async (pageNumber: number, itemsPerPage: number) => {
     try {
       const {
         selectedCountry,
@@ -785,40 +570,44 @@ private getShortlistedItems = async () => {
         selectedExpense,
         selectedUniversityType,
       } = this.state;
-
+  
       let filterQuery = "";
-
+  
       if (selectedCountry) {
         filterQuery += `Country/Title eq '${selectedCountry}'`;
       }
-
+  
       if (selectedCity) {
         filterQuery += filterQuery ? " and " : "";
         filterQuery += `City/Title eq '${selectedCity}'`;
       }
-
+  
       if (includeIvyLeague) {
         filterQuery += filterQuery ? " and " : "";
         filterQuery += `Ivy eq 1`;
       }
-
+  
       if (STEMcourse) {
         filterQuery += filterQuery ? " and " : "";
         filterQuery += `STEM eq 1`;
       }
-
+  
       if (selectedExpense) {
         filterQuery += filterQuery ? " and " : "";
         filterQuery += `Expense eq '${selectedExpense}'`;
       }
-
+  
       if (selectedUniversityType) {
         filterQuery += filterQuery ? " and " : "";
         filterQuery += `UniversityType eq '${selectedUniversityType}'`;
       }
-
+  
+      // Calculate skip and top values for pagination
+      const skip = (pageNumber - 1) * itemsPerPage;
+      const top = itemsPerPage;
+  
       let items: any[];
-
+  
       if (filterQuery) {
         items = await this._sp.web.lists
           .getByTitle("Display_Uni_List")
@@ -835,7 +624,9 @@ private getShortlistedItems = async () => {
           )
           .expand("Country", "City", "University", "Program_M")
           .filter(filterQuery)
-          .orderBy("GlobalRanking", true)(); // true for ascending order
+          .orderBy("GlobalRanking", true)
+          .top(top)
+          .skip(skip)();
       } else {
         items = await this._sp.web.lists
           .getByTitle("Display_Uni_List")
@@ -851,69 +642,152 @@ private getShortlistedItems = async () => {
             "SATscore"
           )
           .expand("Country", "City", "University", "Program_M")
-          .orderBy("GlobalRanking", true)(); // true for ascending order
+          .orderBy("GlobalRanking", true)
+          .top(top)
+          .skip(skip)();
       }
-
+  
       console.log(items);
-
+  
+      // Update state with the fetched items and current page
+      this.setState({ items, currentPage: pageNumber });
+  
       // Rest of your code for rendering items
+      //@ts-ignore
       let chanceOfAdmission = "N/A"; // Default value
-
+  
       if (items.length > 0) {
         var html = `<style>
-                  .tiles {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 20px;
-                  }
-                  .tile {
-                    position: relative;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                    padding: 10px;
-                    box-sizing: border-box;
-                    text-align: center;
-                  }
-                  .tile-image {
-                    width: 100%;
-                    height: auto;
-                    border-radius: 5px;
-                    cursor: pointer;
-                  }
-                  .tile-title {
-                    font-weight: bold;
-                    margin-top: 5px;
-                  }
-                  .tile-ranking {
-                    margin-top: 5px;
-                  }
-                  .shortlist-button {
-                    background-color: #0078d4;
-                    color: #fff;
-                    border: none;
-                    border-radius: 3px;
-                    padding: 5px 10px;
-                    cursor: pointer;
-                  }
-                </style>
-                <div class="tiles">`;
-
-        items.forEach((item, index) => {
-          const universityTitle = item.University
-            ? item.University.Title
-            : "N/A";
+        .tiles {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 20px;
+          justify-content: center;
+          padding: 20px;
+        }
+      
+        .card {
+          width: 190px;
+          background: white;
+          padding: .4em;
+          border-radius: 6px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+      
+        .card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+      
+        .card-image {
+          background-color: rgb(236, 236, 236);
+          width: 100%;
+          height: 130px;
+          border-radius: 6px 6px 0 0;
+          object-fit: cover;
+          transition: transform 0.3s;
+        }
+      
+        .card-image:hover {
+          transform: scale(1.05);
+        }
+      
+        .category {
+          text-transform: uppercase;
+          font-size: 0.7em;
+          font-weight: 600;
+          color: rgb(63, 121, 230);
+          padding: 10px 7px 0;
+          display: block;
+        }
+      
+        .heading {
+          font-weight: 600;
+          color: rgb(88, 87, 87);
+          padding: 7px;
+          font-size: 1em;
+          height: 42px; /* Set the desired height */
+        }
+      
+  
+        .shortlist-button {
+          position: relative;
+          width: 157px;
+          height: 40px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          border: 1px solid #34974d;
+          background-color: #3aa856;
+        }
+        
+        .shortlist-button, .button__icon, .button__text {
+          transition: all 0.3s;
+        }
+        
+        .shortlist-button .button__text {
+          transform: translateX(30px);
+          color: #fff;
+          font-weight: 600;
+        }
+        
+        .shortlist-button .button__icon {
+          position: absolute;
+          transform: translateX(109px);
+          height: 100%;
+          width: 39px;
+          background-color: #34974d;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .shortlist-button .svg {
+          width: 30px;
+          stroke: #fff;
+        }
+        
+        .shortlist-button:hover {
+          background: #34974d;
+        }
+        
+        .shortlist-button:hover .button__text {
+          color: transparent;
+        }
+        
+        .shortlist-button:hover .button__icon {
+          width: 148px;
+          transform: translateX(0);
+        }
+        
+        .shortlist-button:active .button__icon {
+          background-color: #2e8644;
+        }
+        
+        .shortlist-button:active {
+          border: 1px solid #2e8644;
+        }
+  
+        .buttonbox{
+          display: flex;
+          justify-content: center; /* Center horizontally */
+          position: relative; /*
+        }
+      </style>
+      
+      <div class="tiles">
+      ${items
+        .map((item) => {
+          const universityTitle = item.University ? item.University.Title : "N/A";
           const imageUrl = item.Img_A ? item.Img_A.Url : "";
           const uniLink = item.Uni_links ? item.Uni_links.Url : "";
           const globalRanking = item.GlobalRanking ? item.GlobalRanking : "N/A";
           let SATscore = "N/A";
-
+    
           // Check if SATscore field exists and is a number
           if (item.SATscore && !isNaN(parseFloat(item.SATscore))) {
             SATscore = item.SATscore;
-            // chanceOfAdmission = this.getChanceOfAdmission(
-            //   1400,
-            //   parseFloat(SATscore)
-            // );
             let convertedSATScore =
               this.state.convertedSATScore !== null
                 ? this.state.convertedSATScore.toString()
@@ -922,45 +796,63 @@ private getShortlistedItems = async () => {
               parseFloat(convertedSATScore),
               parseFloat(SATscore)
             );
-            // chanceOfAdmission = this.getChanceOfAdmission(parseFloat(this.state.convertedSATScore), parseFloat(SATscore));
           }
-          html += `
-                    <div class="tile">
-                      <a href="${uniLink}" target="_blank" rel="noopener noreferrer">
-                        <img src="${imageUrl}" alt="Image2" class="tile-image" />
-                        <div class="tile-title">${universityTitle}</div>
-                        <div class="tile-ranking">Rank: ${globalRanking}</div>
-                        <div class="tile-eligibility">SAT Score: ${SATscore}</div>
-                        <div class="tile-eligibility">Chance of Admission: ${chanceOfAdmission}</div>
-            </a>
-                      <button class="shortlist-button" data-id="${item.ID}" data-university="${universityTitle}" data-program="${item.Program_M.Title}">Shortlist</button>
-                    </div>`;
+    
+          // Logging the values before creating the button
+          console.log('Item ID:', item.ID);
+          console.log('University Title:', universityTitle);
+          console.log('Program Title:', item.Program_M ? item.Program_M.Title : 'N/A');
+    
+          return `
+            <div class="card">
+              <a href="${uniLink}" target="_blank" rel="noopener noreferrer">
+                <img src="${imageUrl}" alt="University Image" class="card-image" />
+                <div class="category">Rank: ${globalRanking}</div>
+                <div class="heading" height="40px" >${universityTitle}</div>
+              </a>
+              <div class="buttonbox">
+                <button type="button" class="shortlist-button" data-id="${item.ID}" data-university="${universityTitle}" data-program="${item.Program_M ? item.Program_M.Title : 'N/A'}">
+                  <span class="button__text">Shortlist</span>
+                  <span class="button__icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke="currentColor" height="24" fill="none" class="svg">
+                      <line y2="19" y1="5" x2="12" x1="12"></line>
+                      <line y2="12" y1="12" x2="19" x1="5"></line>
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </div>`;
+        })
+        .join("")}
+    </div>`;
+    
+    const allItemsElement = document.getElementById("allItems");
+    if (allItemsElement) {
+      allItemsElement.innerHTML = html;
+    
+      // Add event listener to shortlist button
+      document.querySelectorAll(".shortlist-button").forEach((button) => {
+        button.addEventListener("click", async (event) => {
+          const target = event.currentTarget as HTMLElement;
+          const id = target.dataset.id;
+          const university = target.dataset.university;
+          let program = target.dataset.program || "";
+    
+          // Logging dataset attributes
+          console.log('Button Clicked - ID:', id, 'University:', university, 'Program:', program);
+    
+          if (!id || !university) {
+            console.error("ID or university is missing from button dataset.");
+            alert("Error: ID or university is missing from button dataset.");
+            return;
+          }
+    
+          await this.shortlistUniversity(id, university, program);
         });
-
-        html += `</div>`;
-        const allItemsElement = document.getElementById("allItems");
-        if (allItemsElement) {
-          allItemsElement.innerHTML = html;
-
-          // Add event listener to shortlist button
-          document.querySelectorAll(".shortlist-button").forEach((button) => {
-            button.addEventListener("click", async (event) => {
-              const target = event.target as HTMLElement;
-              const id = target.dataset.id;
-              const university = target.dataset.university;
-              let program = target.dataset.program || "";
-              if (id && university) {
-                await this.shortlistUniversity(id, university, program);
-              } else {
-                console.error(
-                  "ID, university, or program is missing from button dataset."
-                );
-              }
-            });
-          });
-        } else {
-          console.error("Element with id 'allItems' not found.");
-        }
+      });
+    } else {
+      console.error("Element with id 'allItems' not found.");
+    }
       } else {
         this.undoRead();
         alert(`No items found.`);
@@ -970,6 +862,7 @@ private getShortlistedItems = async () => {
       alert("An error occurred while fetching items.");
     }
   };
+
 
   private undoRead = () => {
     this.setState({ items: [] });
@@ -1108,3 +1001,1030 @@ private getShortlistedItems = async () => {
 
 // const chanceOfAdmission = getChanceOfAdmission(userScore, minEligibilityScore);
 // console.log(chanceOfAdmission); // This will output "High Chance"
+  // // Filter By public and private
+  // private getAllItems = async () => {
+  //   try {
+  //     const {
+  //       selectedCountry,
+  //       selectedCity,
+  //       includeIvyLeague,
+  //       STEMcourse,
+  //       selectedExpense,
+  //       selectedUniversityType,
+  //     } = this.state;
+
+  //     let filterQuery = "";
+
+  //     if (selectedCountry) {
+  //       filterQuery += `Country/Title eq '${selectedCountry}'`;
+  //     }
+
+  //     if (selectedCity) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `City/Title eq '${selectedCity}'`;
+  //     }
+
+  //     if (includeIvyLeague) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `Ivy eq 1`;
+  //     }
+
+  //     if (STEMcourse) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `STEM eq 1`;
+  //     }
+
+  //     if (selectedExpense) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `Expense eq '${selectedExpense}'`;
+  //     }
+
+  //     if (selectedUniversityType) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `UniversityType eq '${selectedUniversityType}'`;
+  //     }
+
+  //     let items: any[];
+
+  //     if (filterQuery) {
+  //       items = await this._sp.web.lists
+  //         .getByTitle("Display_Uni_List")
+  //         .items.select(
+  //           "ID",
+  //           "University/Title",
+  //           "City/Title",
+  //           "Country/Title",
+  //           "Program_M/Title",
+  //           "Img_A",
+  //           "Uni_links",
+  //           "GlobalRanking",
+  //           "SATscore"
+  //         )
+  //         .expand("Country", "City", "University", "Program_M")
+  //         .filter(filterQuery)
+  //         .orderBy("GlobalRanking", true)(); // true for ascending order
+  //     } else {
+  //       items = await this._sp.web.lists
+  //         .getByTitle("Display_Uni_List")
+  //         .items.select(
+  //           "ID",
+  //           "University/Title",
+  //           "City/Title",
+  //           "Country/Title",
+  //           "Program_M/Title",
+  //           "Img_A",
+  //           "Uni_links",
+  //           "GlobalRanking",
+  //           "SATscore"
+  //         )
+  //         .expand("Country", "City", "University", "Program_M")
+  //         .orderBy("GlobalRanking", true)(); // true for ascending order
+  //     }
+
+  //     console.log(items);
+
+  //     // Rest of your code for rendering items
+  //     let chanceOfAdmission = "N/A"; // Default value
+
+  //     if (items.length > 0) {
+  //       var html = `<style>
+  //                 .tiles {
+  //                   display: grid;
+  //                   grid-template-columns: repeat(3, 1fr);
+  //                   gap: 20px;
+  //                 }
+  //                 .tile {
+  //                   position: relative;
+  //                   border: 1px solid #ddd;
+  //                   border-radius: 5px;
+  //                   padding: 10px;
+  //                   box-sizing: border-box;
+  //                   text-align: center;
+  //                 }
+  //                 .tile-image {
+  //                   width: 100%;
+  //                   height: auto;
+  //                   border-radius: 5px;
+  //                   cursor: pointer;
+  //                 }
+  //                 .tile-title {
+  //                   font-weight: bold;
+  //                   margin-top: 5px;
+  //                 }
+  //                 .tile-ranking {
+  //                   margin-top: 5px;
+  //                 }
+  //                 .shortlist-button {
+  //                   background-color: #0078d4;
+  //                   color: #fff;
+  //                   border: none;
+  //                   border-radius: 3px;
+  //                   padding: 5px 10px;
+  //                   cursor: pointer;
+  //                 }
+  //               </style>
+  //               <div class="tiles">`;
+
+  //       items.forEach((item, index) => {
+  //         const universityTitle = item.University
+  //           ? item.University.Title
+  //           : "N/A";
+  //         const imageUrl = item.Img_A ? item.Img_A.Url : "";
+  //         const uniLink = item.Uni_links ? item.Uni_links.Url : "";
+  //         const globalRanking = item.GlobalRanking ? item.GlobalRanking : "N/A";
+  //         let SATscore = "N/A";
+
+  //         // Check if SATscore field exists and is a number
+  //         if (item.SATscore && !isNaN(parseFloat(item.SATscore))) {
+  //           SATscore = item.SATscore;
+  //           // chanceOfAdmission = this.getChanceOfAdmission(
+  //           //   1400,
+  //           //   parseFloat(SATscore)
+  //           // );
+  //           let convertedSATScore =
+  //             this.state.convertedSATScore !== null
+  //               ? this.state.convertedSATScore.toString()
+  //               : "0";
+  //           chanceOfAdmission = this.getChanceOfAdmission(
+  //             parseFloat(convertedSATScore),
+  //             parseFloat(SATscore)
+  //           );
+  //           // chanceOfAdmission = this.getChanceOfAdmission(parseFloat(this.state.convertedSATScore), parseFloat(SATscore));
+  //         }
+  //         html += `
+  //                   <div class="tile">
+  //                     <a href="${uniLink}" target="_blank" rel="noopener noreferrer">
+  //                       <img src="${imageUrl}" alt="Image2" class="tile-image" />
+  //                       <div class="tile-title">${universityTitle}</div>
+  //                       <div class="tile-ranking">Rank: ${globalRanking}</div>
+  //                       <div class="tile-eligibility">SAT Score: ${SATscore}</div>
+  //                       <div class="tile-eligibility">Chance of Admission: ${chanceOfAdmission}</div>
+  //           </a>
+  //                     <button class="shortlist-button" data-id="${item.ID}" data-university="${universityTitle}" data-program="${item.Program_M.Title}">Shortlist</button>
+  //                   </div>`;
+  //       });
+
+  //       html += `</div>`;
+  //       const allItemsElement = document.getElementById("allItems");
+  //       if (allItemsElement) {
+  //         allItemsElement.innerHTML = html;
+
+  //         // Add event listener to shortlist button
+  //         document.querySelectorAll(".shortlist-button").forEach((button) => {
+  //           button.addEventListener("click", async (event) => {
+  //             const target = event.target as HTMLElement;
+  //             const id = target.dataset.id;
+  //             const university = target.dataset.university;
+  //             let program = target.dataset.program || "";
+  //             if (id && university) {
+  //               await this.shortlistUniversity(id, university, program);
+  //             } else {
+  //               console.error(
+  //                 "ID, university, or program is missing from button dataset."
+  //               );
+  //             }
+  //           });
+  //         });
+  //       } else {
+  //         console.error("Element with id 'allItems' not found.");
+  //       }
+  //     } else {
+  //       this.undoRead();
+  //       alert(`No items found.`);
+  //     }
+  //   } catch (e) {
+  //     console.error(e);
+  //     alert("An error occurred while fetching items.");
+  //   }
+  // };
+  //With Pagination
+  //  private getAllItems = async (pageNumber: number, itemsPerPage: number) => {
+  //   try {
+  //     const {
+  //       selectedCountry,
+  //       selectedCity,
+  //       includeIvyLeague,
+  //       STEMcourse,
+  //       selectedExpense,
+  //       selectedUniversityType,
+  //     } = this.state;
+
+  //     let filterQuery = "";
+
+  //     if (selectedCountry) {
+  //       filterQuery += `Country/Title eq '${selectedCountry}'`;
+  //     }
+
+  //     if (selectedCity) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `City/Title eq '${selectedCity}'`;
+  //     }
+
+  //     if (includeIvyLeague) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `Ivy eq 1`;
+  //     }
+
+  //     if (STEMcourse) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `STEM eq 1`;
+  //     }
+
+  //     if (selectedExpense) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `Expense eq '${selectedExpense}'`;
+  //     }
+
+  //     if (selectedUniversityType) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `UniversityType eq '${selectedUniversityType}'`;
+  //     }
+
+  //     // Calculate skip and top values for pagination
+  //     const skip = (pageNumber - 1) * itemsPerPage;
+  //     const top = itemsPerPage;
+
+  //     let items: any[];
+
+  //     if (filterQuery) {
+  //       items = await this._sp.web.lists
+  //         .getByTitle("Display_Uni_List")
+  //         .items.select(
+  //           "ID",
+  //           "University/Title",
+  //           "City/Title",
+  //           "Country/Title",
+  //           "Program_M/Title",
+  //           "Img_A",
+  //           "Uni_links",
+  //           "GlobalRanking",
+  //           "SATscore"
+  //         )
+  //         .expand("Country", "City", "University", "Program_M")
+  //         .filter(filterQuery)
+  //         .orderBy("GlobalRanking", true)
+  //         .top(top)
+  //         .skip(skip)();
+  //     } else {
+  //       items = await this._sp.web.lists
+  //         .getByTitle("Display_Uni_List")
+  //         .items.select(
+  //           "ID",
+  //           "University/Title",
+  //           "City/Title",
+  //           "Country/Title",
+  //           "Program_M/Title",
+  //           "Img_A",
+  //           "Uni_links",
+  //           "GlobalRanking",
+  //           "SATscore"
+  //         )
+  //         .expand("Country", "City", "University", "Program_M")
+  //         .orderBy("GlobalRanking", true)
+  //         .top(top)
+  //         .skip(skip)();
+  //     }
+
+  //     console.log(items);
+
+  //     // Update state with the fetched items and current page
+  //     this.setState({ items, currentPage: pageNumber });
+
+  //     // Rest of your code for rendering items
+  //     //@ts-ignore
+  //     let chanceOfAdmission = "N/A"; // Default value
+
+  //     if (items.length > 0) {
+  //       var html = `<style>
+  //       .tiles {
+  //         display: flex;
+  //         flex-wrap: wrap;
+  //         gap: 20px;
+  //         justify-content: center;
+  //         padding: 20px;
+  //       }
+
+  //       .card {
+  //         width: 190px;
+  //         background: white;
+  //         padding: .4em;
+  //         border-radius: 6px;
+  //         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  //         transition: transform 0.2s, box-shadow 0.2s;
+  //       }
+
+  //       .card:hover {
+  //         transform: translateY(-5px);
+  //         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  //       }
+
+  //       .card-image {
+  //         background-color: rgb(236, 236, 236);
+  //         width: 100%;
+  //         height: 130px;
+  //         border-radius: 6px 6px 0 0;
+  //         object-fit: cover;
+  //         transition: transform 0.3s;
+  //       }
+
+  //       .card-image:hover {
+  //         transform: scale(1.05);
+  //       }
+
+  //       .category {
+  //         text-transform: uppercase;
+  //         font-size: 0.7em;
+  //         font-weight: 600;
+  //         color: rgb(63, 121, 230);
+  //         padding: 10px 7px 0;
+  //         display: block;
+  //       }
+
+  //       .heading {
+  //         font-weight: 600;
+  //         color: rgb(88, 87, 87);
+  //         padding: 7px;
+  //         font-size: 1em;
+  //         height: 42px; /* Set the desired height */
+  //       }
+
+
+  //       .shortlist-button {
+  //         position: relative;
+  //         width: 157px;
+  //         height: 40px;
+  //         cursor: pointer;
+  //         display: flex;
+  //         align-items: center;
+  //         border: 1px solid #34974d;
+  //         background-color: #3aa856;
+  //       }
+
+  //       .shortlist-button, .button__icon, .button__text {
+  //         transition: all 0.3s;
+  //       }
+
+  //       .shortlist-button .button__text {
+  //         transform: translateX(30px);
+  //         color: #fff;
+  //         font-weight: 600;
+  //       }
+
+  //       .shortlist-button .button__icon {
+  //         position: absolute;
+  //         transform: translateX(109px);
+  //         height: 100%;
+  //         width: 39px;
+  //         background-color: #34974d;
+  //         display: flex;
+  //         align-items: center;
+  //         justify-content: center;
+  //       }
+
+  //       .shortlist-button .svg {
+  //         width: 30px;
+  //         stroke: #fff;
+  //       }
+
+  //       .shortlist-button:hover {
+  //         background: #34974d;
+  //       }
+
+  //       .shortlist-button:hover .button__text {
+  //         color: transparent;
+  //       }
+
+  //       .shortlist-button:hover .button__icon {
+  //         width: 148px;
+  //         transform: translateX(0);
+  //       }
+
+  //       .shortlist-button:active .button__icon {
+  //         background-color: #2e8644;
+  //       }
+
+  //       .shortlist-button:active {
+  //         border: 1px solid #2e8644;
+  //       }
+
+  //       .buttonbox{
+  //         display: flex;
+  //         justify-content: center; /* Center horizontally */
+  //         position: relative; /*
+  //       }
+  //     </style>
+
+  //     <div class="tiles">
+  //       ${items
+  //         .map((item) => {
+  //           const universityTitle = item.University ? item.University.Title : "N/A";
+  //           const imageUrl = item.Img_A ? item.Img_A.Url : "";
+  //           const uniLink = item.Uni_links ? item.Uni_links.Url : "";
+  //           const globalRanking = item.GlobalRanking ? item.GlobalRanking : "N/A";
+  //           let SATscore = "N/A";
+
+  //           // Check if SATscore field exists and is a number
+  //           if (item.SATscore && !isNaN(parseFloat(item.SATscore))) {
+  //             SATscore = item.SATscore;
+  //             let convertedSATScore =
+  //               this.state.convertedSATScore !== null
+  //                 ? this.state.convertedSATScore.toString()
+  //                 : "0";
+  //             chanceOfAdmission = this.getChanceOfAdmission(
+  //               parseFloat(convertedSATScore),
+  //               parseFloat(SATscore)
+  //             );
+  //           }
+
+  //           return `
+  //             <div class="card">
+  //               <a href="${uniLink}" target="_blank" rel="noopener noreferrer">
+  //                 <img src="${imageUrl}" alt="University Image" class="card-image" />
+  //                 <div class="category">Rank: ${globalRanking}</div>
+  //                 <div class="heading" height="40px" >${universityTitle}</div>
+  //               </a>
+  //               <div class="buttonbox">
+  //               <button type="button" class="shortlist-button" data-id="${item.ID}" data-university="${universityTitle}" data-program="${item.Program_M.Title}">
+  //               <span class="button__text">Shortlist</span>
+  //               <span class="button__icon">
+  //                 <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke="currentColor" height="24" fill="none" class="svg">
+  //                   <line y2="19" y1="5" x2="12" x1="12"></line>
+  //                   <line y2="12" y1="12" x2="19" x1="5"></line>
+  //                 </svg>
+  //               </span>
+  //             </button>
+  //             </div>
+
+  //               </div>`;
+  //         })
+  //         .join("")}
+  //     </div>
+  //     `;
+
+  //       // html += `</div>`;
+  //       const allItemsElement = document.getElementById("allItems");
+  //       if (allItemsElement) {
+  //         allItemsElement.innerHTML = html;
+
+  //         // Add event listener to shortlist button
+  //         document.querySelectorAll(".shortlist-button").forEach((button) => {
+  //           button.addEventListener("click", async (event) => {
+  //             const target = event.target as HTMLElement;
+  //             const id = target.dataset.id;
+  //             const university = target.dataset.university;
+  //             let program = target.dataset.program || "";
+  //             if (id && university) {
+  //               await this.shortlistUniversity(id, university, program);
+  //             } else {
+  //               console.error(
+  //                 "ID, university, or program is missing from button dataset."
+  //               );
+  //             }
+  //           });
+  //         });
+  //       } else {
+  //         console.error("Element with id 'allItems' not found.");
+  //       }
+  //     } else {
+  //       this.undoRead();
+  //       alert(`No items found.`);
+  //     }
+  //   } catch (e) {
+  //     console.error(e);
+  //     alert("An error occurred while fetching items.");
+  //   }
+  // };
+  // private shortlistCourse = async () => {
+  //   try {
+  //     const { selectedUniversity, selectedProgram } = this.state;
+  //     let program = selectedProgram || ""; // If no program selected, use blank value
+  //     if (!selectedUniversity) {
+  //       alert("Please select a University before shortlisting.");
+  //       return;
+  //     }
+
+  //     // Get the current user
+  //     const user = await this._sp.web.currentUser();
+  //     console.log(`Current user: ${user.Title}`);
+
+  //     // Add the item to the "Favourites" list with the titles and IDs
+  //     await this._sp.web.lists.getByTitle("Favourites").items.add({
+  //       Title: `Shortlisted ${selectedUniversity} - ${program}`,
+  //       University: selectedUniversity,
+  //       Program: program,
+  //       username: user.Title, // Add the user's title to the item
+  //     });
+
+  //     alert("Course has been successfully shortlisted!");
+  //   } catch (error) {
+  //     console.error("Error shortlisting course:", error);
+  //     alert("An error occurred while shortlisting the course.");
+  //   }
+  // };
+  // private getShortlistedItems = async () => {
+  //   try {
+  //     // Fetch items from the Shortlisted list
+  //     const items: any[] = await this._sp.web.lists
+  //       .getByTitle("Shortlisted")
+  //       .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+
+  //     // Get the current user's title (assuming you have access to it)
+  //     const user = await this._sp.web.currentUser();
+  //     const currentUserTitle = user.Title; // Replace with the actual current user's title
+
+  //     // Generate HTML for the table
+  //     let html = `<div class="tiles-container">`;
+
+  // items.forEach((item) => {
+  // if (item.username === currentUserTitle) {
+  //   html += `
+  // <div class="tile">
+  // <div class="tile-content">
+  //   <h3>${item.Title}</h3>
+  //   <p>${item.University}</p>
+  // </div>
+  // <div class="tile-actions">
+  //   <button class="delete-button" data-id="${item.ID}">Delete</button>
+  //   <button class="apply-button" data-id="${item.ID}">Apply</button>
+  // </div>
+  // </div>`;
+  // }
+  // });
+
+  // html += `</div>`;
+
+
+  //     // Display the table inside the specified <div>
+  //     const allItemsElement = document.getElementById("allItems");
+  //     if (allItemsElement) {
+  //       allItemsElement.innerHTML = html;
+
+  //       // Add event listeners to delete and apply buttons
+  //       document.querySelectorAll(".delete-button").forEach((button) => {
+  //         button.addEventListener("click", async (event) => {
+  //           const target = event.target as HTMLElement;
+  //           const id = target.dataset.id;
+  //           if (id) {
+  //             await this.deleteItemFromShortlist(id);
+  //             alert("Item Deleted!");
+  //           } else {
+  //             console.error("ID is missing or undefined from button dataset.");
+  //           }
+  //         });
+  //       });
+
+  //       document.querySelectorAll(".apply-button").forEach((button) => {
+  //         button.addEventListener("click", async (event) => {
+  //           const target = event.target as HTMLElement;
+  //           const id = target.dataset.id;
+  //           if (id) {
+  //             await this.applyItem(id);
+  //             alert("Item Applied!");
+  //           } else {
+  //             console.error("ID is missing or undefined from button dataset.");
+  //           }
+  //         });
+  //       });
+  //     } else {
+  //       console.error("Element with id 'allItems' not found.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching shortlisted items:", error);
+  //     // Optionally, display an error message or handle the error in another way
+  //   }
+  // };
+  // private getAllItems = async (pageNumber: number, itemsPerPage: number) => {
+  //   try {
+  //     const {
+  //       selectedCountry,
+  //       selectedCity,
+  //       includeIvyLeague,
+  //       STEMcourse,
+  //       selectedExpense,
+  //       selectedUniversityType,
+  //     } = this.state;
+
+  //     let filterQuery = "";
+
+  //     if (selectedCountry) {
+  //       filterQuery += `Country/Title eq '${selectedCountry}'`;
+  //     }
+
+  //     if (selectedCity) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `City/Title eq '${selectedCity}'`;
+  //     }
+
+  //     if (includeIvyLeague) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `Ivy eq 1`;
+  //     }
+
+  //     if (STEMcourse) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `STEM eq 1`;
+  //     }
+
+  //     if (selectedExpense) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `Expense eq '${selectedExpense}'`;
+  //     }
+
+  //     if (selectedUniversityType) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `UniversityType eq '${selectedUniversityType}'`;
+  //     }
+
+  //     // Calculate skip and top values for pagination
+  //     const skip = (pageNumber - 1) * itemsPerPage;
+  //     const top = itemsPerPage;
+
+  //     let items: any[];
+
+  //     if (filterQuery) {
+  //       items = await this._sp.web.lists
+  //         .getByTitle("Display_Uni_List")
+  //         .items.select(
+  //           "ID",
+  //           "University/Title",
+  //           "City/Title",
+  //           "Country/Title",
+  //           "Program_M/Title",
+  //           "Img_A",
+  //           "Uni_links",
+  //           "GlobalRanking",
+  //           "SATscore"
+  //         )
+  //         .expand("Country", "City", "University", "Program_M")
+  //         .filter(filterQuery)
+  //         .orderBy("GlobalRanking", true)
+  //         .top(top)
+  //         .skip(skip)();
+  //     } else {
+  //       items = await this._sp.web.lists
+  //         .getByTitle("Display_Uni_List")
+  //         .items.select(
+  //           "ID",
+  //           "University/Title",
+  //           "City/Title",
+  //           "Country/Title",
+  //           "Program_M/Title",
+  //           "Img_A",
+  //           "Uni_links",
+  //           "GlobalRanking",
+  //           "SATscore"
+  //         )
+  //         .expand("Country", "City", "University", "Program_M")
+  //         .orderBy("GlobalRanking", true)
+  //         .top(top)
+  //         .skip(skip)();
+  //     }
+
+  //     console.log(items);
+
+  //     // Update state with the fetched items and current page
+  //     this.setState({ items, currentPage: pageNumber });
+
+  //     // Rest of your code for rendering items
+  //     //@ts-ignore
+  //     let chanceOfAdmission = "N/A"; // Default value
+
+  //     if (items.length > 0) {
+  //       var html = `<style>
+  //     .tiles {
+  //       display: flex;
+  //       flex-wrap: wrap;
+  //       gap: 20px;
+  //       justify-content: center;
+  //       padding: 20px;
+  //     }
+    
+  //     .card {
+  //       width: 190px;
+  //       background: white;
+  //       padding: .4em;
+  //       border-radius: 6px;
+  //       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  //       transition: transform 0.2s, box-shadow 0.2s;
+  //     }
+    
+  //     .card:hover {
+  //       transform: translateY(-5px);
+  //       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  //     }
+    
+  //     .card-image {
+  //       background-color: rgb(236, 236, 236);
+  //       width: 100%;
+  //       height: 130px;
+  //       border-radius: 6px 6px 0 0;
+  //       object-fit: cover;
+  //       transition: transform 0.3s;
+  //     }
+    
+  //     .card-image:hover {
+  //       transform: scale(1.05);
+  //     }
+    
+  //     .category {
+  //       text-transform: uppercase;
+  //       font-size: 0.7em;
+  //       font-weight: 600;
+  //       color: rgb(63, 121, 230);
+  //       padding: 10px 7px 0;
+  //       display: block;
+  //     }
+    
+  //     .heading {
+  //       font-weight: 600;
+  //       color: rgb(88, 87, 87);
+  //       padding: 7px;
+  //       font-size: 1em;
+  //       height: 42px; /* Set the desired height */
+  //     }
+    
+
+  //     .shortlist-button {
+  //       position: relative;
+  //       width: 157px;
+  //       height: 40px;
+  //       cursor: pointer;
+  //       display: flex;
+  //       align-items: center;
+  //       border: 1px solid #34974d;
+  //       background-color: #3aa856;
+  //     }
+      
+  //     .shortlist-button, .button__icon, .button__text {
+  //       transition: all 0.3s;
+  //     }
+      
+  //     .shortlist-button .button__text {
+  //       transform: translateX(30px);
+  //       color: #fff;
+  //       font-weight: 600;
+  //     }
+      
+  //     .shortlist-button .button__icon {
+  //       position: absolute;
+  //       transform: translateX(109px);
+  //       height: 100%;
+  //       width: 39px;
+  //       background-color: #34974d;
+  //       display: flex;
+  //       align-items: center;
+  //       justify-content: center;
+  //     }
+      
+  //     .shortlist-button .svg {
+  //       width: 30px;
+  //       stroke: #fff;
+  //     }
+      
+  //     .shortlist-button:hover {
+  //       background: #34974d;
+  //     }
+      
+  //     .shortlist-button:hover .button__text {
+  //       color: transparent;
+  //     }
+      
+  //     .shortlist-button:hover .button__icon {
+  //       width: 148px;
+  //       transform: translateX(0);
+  //     }
+      
+  //     .shortlist-button:active .button__icon {
+  //       background-color: #2e8644;
+  //     }
+      
+  //     .shortlist-button:active {
+  //       border: 1px solid #2e8644;
+  //     }
+
+  //     .buttonbox{
+  //       display: flex;
+  //       justify-content: center; /* Center horizontally */
+  //       position: relative; /*
+  //     }
+  //   </style>
+    
+  //   <div class="tiles">
+  //   ${items
+  //           .map((item) => {
+  //             const universityTitle = item.University ? item.University.Title : "N/A";
+  //             const imageUrl = item.Img_A ? item.Img_A.Url : "";
+  //             const uniLink = item.Uni_links ? item.Uni_links.Url : "";
+  //             const globalRanking = item.GlobalRanking ? item.GlobalRanking : "N/A";
+  //             let SATscore = "N/A";
+
+  //             // Check if SATscore field exists and is a number
+  //             if (item.SATscore && !isNaN(parseFloat(item.SATscore))) {
+  //               SATscore = item.SATscore;
+  //               let convertedSATScore =
+  //                 this.state.convertedSATScore !== null
+  //                   ? this.state.convertedSATScore.toString()
+  //                   : "0";
+  //               chanceOfAdmission = this.getChanceOfAdmission(
+  //                 parseFloat(convertedSATScore),
+  //                 parseFloat(SATscore)
+  //               );
+  //             }
+
+  //             // Logging the values before creating the button
+  //             console.log('Item ID:', item.ID);
+  //             console.log('University Title:', universityTitle);
+  //             console.log('Program Title:', item.Program_M ? item.Program_M.Title : 'N/A');
+
+  //             return `
+  //         <div class="card">
+  //           <a href="${uniLink}" target="_blank" rel="noopener noreferrer">
+  //             <img src="${imageUrl}" alt="University Image" class="card-image" />
+  //             <div class="category">Rank: ${globalRanking}</div>
+  //             <div class="heading" height="40px" >${universityTitle}</div>
+  //           </a>
+  //           <div class="buttonbox">
+  //             <button type="button" class="shortlist-button" data-id="${item.ID}" data-university="${universityTitle}" data-program="${item.Program_M ? item.Program_M.Title : 'N/A'}">
+  //               <span class="button__text">Shortlist</span>
+  //               <span class="button__icon">
+  //                 <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke="currentColor" height="24" fill="none" class="svg">
+  //                   <line y2="19" y1="5" x2="12" x1="12"></line>
+  //                   <line y2="12" y1="12" x2="19" x1="5"></line>
+  //                 </svg>
+  //               </span>
+  //             </button>
+  //           </div>
+  //         </div>`;
+  //           })
+  //           .join("")}
+  // </div>`;
+
+  //       const allItemsElement = document.getElementById("allItems");
+  //       if (allItemsElement) {
+  //         allItemsElement.innerHTML = html;
+
+  //         // Add event listener to shortlist button
+  //         document.querySelectorAll(".shortlist-button").forEach((button) => {
+  //           button.addEventListener("click", async (event) => {
+  //             const target = event.currentTarget as HTMLElement;
+  //             const id = target.dataset.id;
+  //             const university = target.dataset.university;
+  //             let program = target.dataset.program || "";
+
+  //             // Logging dataset attributes
+  //             console.log('Button Clicked - ID:', id, 'University:', university, 'Program:', program);
+
+  //             if (!id || !university) {
+  //               console.error("ID or university is missing from button dataset.");
+  //               alert("Error: ID or university is missing from button dataset.");
+  //               return;
+  //             }
+
+  //             await this.shortlistUniversity(id, university, program);
+  //           });
+  //         });
+  //       } else {
+  //         console.error("Element with id 'allItems' not found.");
+  //       }
+  //     } else {
+  //       this.undoRead();
+  //       alert(`No items found.`);
+  //     }
+  //   } catch (e) {
+  //     console.error(e);
+  //     alert("An error occurred while fetching items.");
+  //   }
+  // };
+  //   private getShortlistedItems = async () => {
+  //     try {
+  //       // Fetch items from the Shortlisted list
+  //       const items: any[] = await this._sp.web.lists
+  //         .getByTitle("Shortlisted")
+  //         .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+
+  //       // Get the current user's title (assuming you have access to it)
+  //       const user = await this._sp.web.currentUser();
+  //       const currentUserTitle = user.Title; // Replace with the actual current user's title
+
+  //       // Generate HTML for the table
+  //       let html = `
+  // <table>
+  // <tr>
+  //   <th>Title</th>
+  //   <th>University</th>
+  //   <th>Action</th>
+  // </tr>`;
+
+  //       items.forEach((item) => {
+  //         // Check if the item's Username matches the current user's title
+  //         if (item.username === currentUserTitle) {
+  //           html += `
+  // <tr>
+  //   <td>${item.Title}</td>
+  //   <td>${item.University}</td>
+  //   <td>
+  //     <button class="delete-button" data-id="${item.ID}">Delete</button>
+  //     <button class="apply-button" data-id="${item.ID}">Apply</button>
+  //   </td>
+  // </tr>`;
+  //         }
+  //       });
+
+  //       html += `</table>`;
+
+  //       // Display the table inside the specified <div>
+  //       const allItemsElement = document.getElementById("allItems");
+  //       if (allItemsElement) {
+  //         allItemsElement.innerHTML = html;
+
+  //         // Add event listeners to delete and apply buttons
+  //         document.querySelectorAll(".delete-button").forEach((button) => {
+  //           button.addEventListener("click", async (event) => {
+  //             const target = event.target as HTMLElement;
+  //             const id = target.dataset.id;
+  //             if (id) {
+  //               await this.deleteItemFromShortlist(id);
+  //               alert("Item Deleted!");
+  //             } else {
+  //               console.error("ID is missing or undefined from button dataset.");
+  //             }
+  //           });
+  //         });
+
+  //         document.querySelectorAll(".apply-button").forEach((button) => {
+  //           button.addEventListener("click", async (event) => {
+  //             const target = event.target as HTMLElement;
+  //             const id = target.dataset.id;
+  //             if (id) {
+  //               await this.applyItem(id);
+  //               alert("Item Applied!");
+  //             } else {
+  //               console.error("ID is missing or undefined from button dataset.");
+  //             }
+  //           });
+  //         });
+  //       } else {
+  //         console.error("Element with id 'allItems' not found.");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching shortlisted items:", error);
+  //       // Optionally, display an error message or handle the error in another way
+  //     }
+  //   };
+// public render(): React.ReactElement<IFilterWebpartProps> {
+  //   const { currentPage, itemsPerPage } = this.state;
+  //   // const totalPages = Math.ceil(Total Items / itemsPerPage);
+  //   const totalPages = Math.ceil(14 / itemsPerPage);
+  //   return (
+  //     <div className={styles.spfxCrudPnp}>
+  //       <div className="results">
+  //         <div className={styles.itemField}>
+  //           <div className={styles.fieldLabel}></div>
+  //           <div id="allItems"></div>
+  //         </div>
+  //         {/* Pagination controls */}
+  //         <div
+  //           className={styles.itemField}
+  //           style={{ display: "flex", justifyContent: "flex-end" }}
+  //         >
+  //           <button
+  //             onClick={() => this.getAllItems(currentPage - 1, itemsPerPage)}
+  //             disabled={currentPage === 1}
+  //             style={{
+  //               backgroundColor: "#0078d4",
+  //               color: "white",
+  //               border: "none",
+  //               borderRadius: "3px",
+  //               padding: "5px 10px",
+  //               marginRight: "5px",
+  //               cursor: "pointer",
+  //             }}
+  //           >
+  //             Previous
+  //           </button>
+  //           <span
+  //             style={{ margin: "0 10px" }}
+  //           >{`Page ${currentPage} of ${totalPages}`}</span>
+  //           <button
+  //             onClick={() => this.getAllItems(currentPage + 1, itemsPerPage)}
+  //             disabled={currentPage === totalPages}
+  //             style={{
+  //               backgroundColor: "#0078d4",
+  //               color: "white",
+  //               border: "none",
+  //               borderRadius: "3px",
+  //               padding: "5px 10px",
+  //               marginRight: "5px",
+  //               cursor: "pointer",
+  //             }}
+  //           >
+  //             Next
+  //           </button>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
+  //@ts-ignore
+  

@@ -67,14 +67,14 @@ export default class Results extends React.Component<
       score: "",
       convertedSATScore: null,
       currentPage: 1,
-      itemsPerPage: 5,
+      itemsPerPage: 9,
     };
     this._sp = getSP();
   }
 
   public componentDidMount() {
     this.fetchCountriesFromSharePointList();
-    this.getAllItems(1, 5);
+    this.getAllItems(1, 9);
     $(document).ready(() => {
       $(".country-select").select2(); // Apply select2 to the Country dropdown (if available
       $(".city-select").select2(); // Apply select2 to the City dropdown
@@ -138,7 +138,6 @@ export default class Results extends React.Component<
       <div className={styles.spfxCrudPnp}>
         <div className="results">
           <div className={styles.itemField}>
-            <div className={styles.fieldLabel}>All Item</div>
             <div id="allItems"></div>
           </div>
           {/* Pagination controls */}
@@ -199,32 +198,32 @@ export default class Results extends React.Component<
 
   private getShortlistedItems = async () => {
     this.undoRead();
-  
+
     try {
-        // Fetch items from the Shortlisted list
-        const items: any[] = await this._sp.web.lists
-            .getByTitle("Shortlisted")
-            .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+      // Fetch items from the Shortlisted list
+      const items: any[] = await this._sp.web.lists
+        .getByTitle("Shortlisted")
+        .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
 
-        // Get the current user's title (assuming you have access to it)
-        const user = await this._sp.web.currentUser();
-        const currentUserTitle = user.Title; // Replace with the actual current user's title
+      // Get the current user's title (assuming you have access to it)
+      const user = await this._sp.web.currentUser();
+      const currentUserTitle = user.Title; // Replace with the actual current user's title
 
-        // Generate HTML for the table
-        let html = `<div class="tiles-container">`;
+      // Generate HTML for the table
+      let html = `<div class="tiles-container">`;
 
-        let rowCounter = 0; // Counter to keep track of tiles in a row
-        items.forEach((item) => {
-            if (item.username === currentUserTitle) {
-                // Check if a new row should be started
-                if (rowCounter % 3 === 0) {
-                    if (rowCounter !== 0) {
-                        html += `</div>`; // Close the previous row
-                    }
-                    html += `<div class="tiles-row">`; // Start a new row
-                }
+      let rowCounter = 0; // Counter to keep track of tiles in a row
+      items.forEach((item) => {
+        if (item.username === currentUserTitle) {
+          // Check if a new row should be started
+          if (rowCounter % 3 === 0) {
+            if (rowCounter !== 0) {
+              html += `</div>`; // Close the previous row
+            }
+            html += `<div class="tiles-row">`; // Start a new row
+          }
 
-                html += `
+          html += `
     <div class="tile">
       <div class="tile-header">
         <h2>${item.University}</h2> <!-- University name as heading -->
@@ -237,123 +236,123 @@ export default class Results extends React.Component<
         <button class="apply-button" data-id="${item.ID}">Apply</button>
       </div>
     </div>`;
-                rowCounter++;
+          rowCounter++;
+        }
+      });
+
+      html += `</div>`; // Close the last row
+
+      // Display the table inside the specified <div>
+      const allItemsElement = document.getElementById("allItems");
+      if (allItemsElement) {
+        allItemsElement.innerHTML = html;
+
+        // Add event listeners to delete and apply buttons
+        document.querySelectorAll(".delete-button").forEach((button) => {
+          button.addEventListener("click", async (event) => {
+            const target = event.target as HTMLElement;
+            const id = target.dataset.id;
+            if (id) {
+              await this.deleteItemFromShortlist(id);
+              alert("Item Deleted!");
+            } else {
+              console.error("ID is missing or undefined from button dataset.");
             }
+          });
         });
 
-        html += `</div>`; // Close the last row
-
-        // Display the table inside the specified <div>
-        const allItemsElement = document.getElementById("allItems");
-        if (allItemsElement) {
-            allItemsElement.innerHTML = html;
-
-            // Add event listeners to delete and apply buttons
-            document.querySelectorAll(".delete-button").forEach((button) => {
-                button.addEventListener("click", async (event) => {
-                    const target = event.target as HTMLElement;
-                    const id = target.dataset.id;
-                    if (id) {
-                        await this.deleteItemFromShortlist(id);
-                        alert("Item Deleted!");
-                    } else {
-                        console.error("ID is missing or undefined from button dataset.");
-                    }
-                });
-            });
-
-            document.querySelectorAll(".apply-button").forEach((button) => {
-                button.addEventListener("click", async (event) => {
-                    const target = event.target as HTMLElement;
-                    const id = target.dataset.id;
-                    if (id) {
-                        await this.applyItem(id);
-                        alert("Item Applied!");
-                    } else {
-                        console.error("ID is missing or undefined from button dataset.");
-                    }
-                });
-            });
-        } else {
-            console.error("Element with id 'allItems' not found.");
-        }
+        document.querySelectorAll(".apply-button").forEach((button) => {
+          button.addEventListener("click", async (event) => {
+            const target = event.target as HTMLElement;
+            const id = target.dataset.id;
+            if (id) {
+              await this.applyItem(id);
+              alert("Item Applied!");
+            } else {
+              console.error("ID is missing or undefined from button dataset.");
+            }
+          });
+        });
+      } else {
+        console.error("Element with id 'allItems' not found.");
+      }
     } catch (error) {
-        console.error("Error fetching shortlisted items:", error);
-        // Optionally, display an error message or handle the error in another way
+      console.error("Error fetching shortlisted items:", error);
+      // Optionally, display an error message or handle the error in another way
     }
-};
-//   private getShortlistedItems = async () => {
-//     try {
-//       // Fetch items from the Shortlisted list
-//       const items: any[] = await this._sp.web.lists
-//         .getByTitle("Shortlisted")
-//         .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+  };
+  //   private getShortlistedItems = async () => {
+  //     try {
+  //       // Fetch items from the Shortlisted list
+  //       const items: any[] = await this._sp.web.lists
+  //         .getByTitle("Shortlisted")
+  //         .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
 
-//       // Get the current user's title (assuming you have access to it)
-//       const user = await this._sp.web.currentUser();
-//       const currentUserTitle = user.Title; // Replace with the actual current user's title
+  //       // Get the current user's title (assuming you have access to it)
+  //       const user = await this._sp.web.currentUser();
+  //       const currentUserTitle = user.Title; // Replace with the actual current user's title
 
-//       // Generate HTML for the table
-//       let html = `<div class="tiles-container">`;
+  //       // Generate HTML for the table
+  //       let html = `<div class="tiles-container">`;
 
-// items.forEach((item) => {
-//   if (item.username === currentUserTitle) {
-//     html += `
-// <div class="tile">
-//   <div class="tile-content">
-//     <h3>${item.Title}</h3>
-//     <p>${item.University}</p>
-//   </div>
-//   <div class="tile-actions">
-//     <button class="delete-button" data-id="${item.ID}">Delete</button>
-//     <button class="apply-button" data-id="${item.ID}">Apply</button>
-//   </div>
-// </div>`;
-//   }
-// });
+  // items.forEach((item) => {
+  //   if (item.username === currentUserTitle) {
+  //     html += `
+  // <div class="tile">
+  //   <div class="tile-content">
+  //     <h3>${item.Title}</h3>
+  //     <p>${item.University}</p>
+  //   </div>
+  //   <div class="tile-actions">
+  //     <button class="delete-button" data-id="${item.ID}">Delete</button>
+  //     <button class="apply-button" data-id="${item.ID}">Apply</button>
+  //   </div>
+  // </div>`;
+  //   }
+  // });
 
-// html += `</div>`;
+  // html += `</div>`;
 
 
-//       // Display the table inside the specified <div>
-//       const allItemsElement = document.getElementById("allItems");
-//       if (allItemsElement) {
-//         allItemsElement.innerHTML = html;
+  //       // Display the table inside the specified <div>
+  //       const allItemsElement = document.getElementById("allItems");
+  //       if (allItemsElement) {
+  //         allItemsElement.innerHTML = html;
 
-//         // Add event listeners to delete and apply buttons
-//         document.querySelectorAll(".delete-button").forEach((button) => {
-//           button.addEventListener("click", async (event) => {
-//             const target = event.target as HTMLElement;
-//             const id = target.dataset.id;
-//             if (id) {
-//               await this.deleteItemFromShortlist(id);
-//               alert("Item Deleted!");
-//             } else {
-//               console.error("ID is missing or undefined from button dataset.");
-//             }
-//           });
-//         });
+  //         // Add event listeners to delete and apply buttons
+  //         document.querySelectorAll(".delete-button").forEach((button) => {
+  //           button.addEventListener("click", async (event) => {
+  //             const target = event.target as HTMLElement;
+  //             const id = target.dataset.id;
+  //             if (id) {
+  //               await this.deleteItemFromShortlist(id);
+  //               alert("Item Deleted!");
+  //             } else {
+  //               console.error("ID is missing or undefined from button dataset.");
+  //             }
+  //           });
+  //         });
 
-//         document.querySelectorAll(".apply-button").forEach((button) => {
-//           button.addEventListener("click", async (event) => {
-//             const target = event.target as HTMLElement;
-//             const id = target.dataset.id;
-//             if (id) {
-//               await this.applyItem(id);
-//               alert("Item Applied!");
-//             } else {
-//               console.error("ID is missing or undefined from button dataset.");
-//             }
-//           });
-//         });
-//       } else {
-//         console.error("Element with id 'allItems' not found.");
-//       }
-//     } catch (error) {
-//       console.error("Error fetching shortlisted items:", error);
-//       // Optionally, display an error message or handle the error in another way
-//     }
-//   };
+  //         document.querySelectorAll(".apply-button").forEach((button) => {
+  //           button.addEventListener("click", async (event) => {
+  //             const target = event.target as HTMLElement;
+  //             const id = target.dataset.id;
+  //             if (id) {
+  //               await this.applyItem(id);
+  //               alert("Item Applied!");
+  //             } else {
+  //               console.error("ID is missing or undefined from button dataset.");
+  //             }
+  //           });
+  //         });
+  //       } else {
+  //         console.error("Element with id 'allItems' not found.");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching shortlisted items:", error);
+  //       // Optionally, display an error message or handle the error in another way
+  //     }
+  //   };
 
   private applyItem = async (id: string) => {
     try {
@@ -518,34 +517,6 @@ export default class Results extends React.Component<
     this.setState({ selectedProgram: event.target.value });
   };
 
-  // private shortlistCourse = async () => {
-  //   try {
-  //     const { selectedUniversity, selectedProgram } = this.state;
-  //     let program = selectedProgram || ""; // If no program selected, use blank value
-  //     if (!selectedUniversity) {
-  //       alert("Please select a University before shortlisting.");
-  //       return;
-  //     }
-
-  //     // Get the current user
-  //     const user = await this._sp.web.currentUser();
-  //     console.log(`Current user: ${user.Title}`);
-
-  //     // Add the item to the "Favourites" list with the titles and IDs
-  //     await this._sp.web.lists.getByTitle("Favourites").items.add({
-  //       Title: `Shortlisted ${selectedUniversity} - ${program}`,
-  //       University: selectedUniversity,
-  //       Program: program,
-  //       username: user.Title, // Add the user's title to the item
-  //     });
-
-  //     alert("Course has been successfully shortlisted!");
-  //   } catch (error) {
-  //     console.error("Error shortlisting course:", error);
-  //     alert("An error occurred while shortlisting the course.");
-  //   }
-  // };
-
   private getCurrentDate = () => {
     const date = new Date();
     return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
@@ -578,7 +549,747 @@ export default class Results extends React.Component<
     }
   };
 
-  // Filter By public and private
+
+  private getAllItems = async (pageNumber: number, itemsPerPage: number) => {
+    try {
+      const {
+        selectedCountry,
+        selectedCity,
+        includeIvyLeague,
+        STEMcourse,
+        selectedExpense,
+        selectedUniversityType,
+      } = this.state;
+  
+      let filterQuery = "";
+  
+      if (selectedCountry) {
+        filterQuery += `Country/Title eq '${selectedCountry}'`;
+      }
+  
+      if (selectedCity) {
+        filterQuery += filterQuery ? " and " : "";
+        filterQuery += `City/Title eq '${selectedCity}'`;
+      }
+  
+      if (includeIvyLeague) {
+        filterQuery += filterQuery ? " and " : "";
+        filterQuery += `Ivy eq 1`;
+      }
+  
+      if (STEMcourse) {
+        filterQuery += filterQuery ? " and " : "";
+        filterQuery += `STEM eq 1`;
+      }
+  
+      if (selectedExpense) {
+        filterQuery += filterQuery ? " and " : "";
+        filterQuery += `Expense eq '${selectedExpense}'`;
+      }
+  
+      if (selectedUniversityType) {
+        filterQuery += filterQuery ? " and " : "";
+        filterQuery += `UniversityType eq '${selectedUniversityType}'`;
+      }
+  
+      // Calculate skip and top values for pagination
+      const skip = (pageNumber - 1) * itemsPerPage;
+      const top = itemsPerPage;
+  
+      let items: any[];
+  
+      if (filterQuery) {
+        items = await this._sp.web.lists
+          .getByTitle("Display_Uni_List")
+          .items.select(
+            "ID",
+            "University/Title",
+            "City/Title",
+            "Country/Title",
+            "Program_M/Title",
+            "Img_A",
+            "Uni_links",
+            "GlobalRanking",
+            "SATscore"
+          )
+          .expand("Country", "City", "University", "Program_M")
+          .filter(filterQuery)
+          .orderBy("GlobalRanking", true)
+          .top(top)
+          .skip(skip)();
+      } else {
+        items = await this._sp.web.lists
+          .getByTitle("Display_Uni_List")
+          .items.select(
+            "ID",
+            "University/Title",
+            "City/Title",
+            "Country/Title",
+            "Program_M/Title",
+            "Img_A",
+            "Uni_links",
+            "GlobalRanking",
+            "SATscore"
+          )
+          .expand("Country", "City", "University", "Program_M")
+          .orderBy("GlobalRanking", true)
+          .top(top)
+          .skip(skip)();
+      }
+  
+      console.log(items);
+  
+      // Update state with the fetched items and current page
+      this.setState({ items, currentPage: pageNumber });
+  
+      // Rest of your code for rendering items
+      //@ts-ignore
+      let chanceOfAdmission = "N/A"; // Default value
+  
+      if (items.length > 0) {
+        var html = `<style>
+        .tiles {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 20px;
+          justify-content: center;
+          padding: 20px;
+        }
+      
+        .card {
+          width: 190px;
+          background: white;
+          padding: .4em;
+          border-radius: 6px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+      
+        .card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+      
+        .card-image {
+          background-color: rgb(236, 236, 236);
+          width: 100%;
+          height: 130px;
+          border-radius: 6px 6px 0 0;
+          object-fit: cover;
+          transition: transform 0.3s;
+        }
+      
+        .card-image:hover {
+          transform: scale(1.05);
+        }
+      
+        .category {
+          text-transform: uppercase;
+          font-size: 0.7em;
+          font-weight: 600;
+          color: rgb(63, 121, 230);
+          padding: 10px 7px 0;
+          display: block;
+        }
+      
+        .heading {
+          font-weight: 600;
+          color: rgb(88, 87, 87);
+          padding: 7px;
+          font-size: 1em;
+          height: 42px; /* Set the desired height */
+        }
+      
+  
+        .shortlist-button {
+          position: relative;
+          width: 157px;
+          height: 40px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          border: 1px solid #34974d;
+          background-color: #3aa856;
+        }
+        
+        .shortlist-button, .button__icon, .button__text {
+          transition: all 0.3s;
+        }
+        
+        .shortlist-button .button__text {
+          transform: translateX(30px);
+          color: #fff;
+          font-weight: 600;
+        }
+        
+        .shortlist-button .button__icon {
+          position: absolute;
+          transform: translateX(109px);
+          height: 100%;
+          width: 39px;
+          background-color: #34974d;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .shortlist-button .svg {
+          width: 30px;
+          stroke: #fff;
+        }
+        
+        .shortlist-button:hover {
+          background: #34974d;
+        }
+        
+        .shortlist-button:hover .button__text {
+          color: transparent;
+        }
+        
+        .shortlist-button:hover .button__icon {
+          width: 148px;
+          transform: translateX(0);
+        }
+        
+        .shortlist-button:active .button__icon {
+          background-color: #2e8644;
+        }
+        
+        .shortlist-button:active {
+          border: 1px solid #2e8644;
+        }
+  
+        .buttonbox{
+          display: flex;
+          justify-content: center; /* Center horizontally */
+          position: relative; /*
+        }
+      </style>
+      
+      <div class="tiles">
+      ${items
+        .map((item) => {
+          const universityTitle = item.University ? item.University.Title : "N/A";
+          const imageUrl = item.Img_A ? item.Img_A.Url : "";
+          const uniLink = item.Uni_links ? item.Uni_links.Url : "";
+          const globalRanking = item.GlobalRanking ? item.GlobalRanking : "N/A";
+          let SATscore = "N/A";
+    
+          // Check if SATscore field exists and is a number
+          if (item.SATscore && !isNaN(parseFloat(item.SATscore))) {
+            SATscore = item.SATscore;
+            let convertedSATScore =
+              this.state.convertedSATScore !== null
+                ? this.state.convertedSATScore.toString()
+                : "0";
+            chanceOfAdmission = this.getChanceOfAdmission(
+              parseFloat(convertedSATScore),
+              parseFloat(SATscore)
+            );
+          }
+    
+          // Logging the values before creating the button
+          console.log('Item ID:', item.ID);
+          console.log('University Title:', universityTitle);
+          console.log('Program Title:', item.Program_M ? item.Program_M.Title : 'N/A');
+    
+          return `
+            <div class="card">
+              <a href="${uniLink}" target="_blank" rel="noopener noreferrer">
+                <img src="${imageUrl}" alt="University Image" class="card-image" />
+                <div class="category">Rank: ${globalRanking}</div>
+                <div class="heading" height="40px" >${universityTitle}</div>
+              </a>
+              <div class="buttonbox">
+                <button type="button" class="shortlist-button" data-id="${item.ID}" data-university="${universityTitle}" data-program="${item.Program_M ? item.Program_M.Title : 'N/A'}">
+                  <span class="button__text">Shortlist</span>
+                  <span class="button__icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke="currentColor" height="24" fill="none" class="svg">
+                      <line y2="19" y1="5" x2="12" x1="12"></line>
+                      <line y2="12" y1="12" x2="19" x1="5"></line>
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </div>`;
+        })
+        .join("")}
+    </div>`;
+    
+    const allItemsElement = document.getElementById("allItems");
+    if (allItemsElement) {
+      allItemsElement.innerHTML = html;
+    
+      // Add event listener to shortlist button
+      document.querySelectorAll(".shortlist-button").forEach((button) => {
+        button.addEventListener("click", async (event) => {
+          const target = event.currentTarget as HTMLElement;
+          const id = target.dataset.id;
+          const university = target.dataset.university;
+          let program = target.dataset.program || "";
+    
+          // Logging dataset attributes
+          console.log('Button Clicked - ID:', id, 'University:', university, 'Program:', program);
+    
+          if (!id || !university) {
+            console.error("ID or university is missing from button dataset.");
+            alert("Error: ID or university is missing from button dataset.");
+            return;
+          }
+    
+          await this.shortlistUniversity(id, university, program);
+        });
+      });
+    } else {
+      console.error("Element with id 'allItems' not found.");
+    }
+      } else {
+        this.undoRead();
+        alert(`No items found.`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("An error occurred while fetching items.");
+    }
+  };
+  
+  private undoRead = () => {
+    this.setState({ items: [] });
+    const allItemsElement = document.getElementById("allItems");
+    if (allItemsElement) {
+      allItemsElement.innerHTML = "";
+    } else {
+      console.error("Element with id 'All Items' not found.");
+    }
+  };
+  //@ts-ignore
+  private getUniInfo = async () => {
+    try {
+      const { selectedUniversity } = this.state;
+      const uni: any[] = await this._sp.web.lists
+        .getByTitle("University")
+        .items.filter(`Title eq '${selectedUniversity}'`)
+        .select(
+          "ID",
+          "Title",
+          "City",
+          "Expense",
+          "GlobalRank",
+          "TotalEnrollment",
+          "Undergraduates",
+          "FinancialAid",
+          "PellGrant",
+          "StudentLoans",
+          "AverageDebt",
+          "Applicants",
+          "Accepted",
+          "Enrolled",
+          "ReturningFreshmen",
+          "Academics",
+          "Social",
+          "QualityOfLife",
+          "Admission"
+        )();
+
+      if (uni.length > 0) {
+        let html = `<table>`;
+        for (const itemKey in uni[0]) {
+          if (uni[0].hasOwnProperty(itemKey)) {
+            let itemValue = uni[0][itemKey];
+            if (itemValue === undefined || itemValue === null) {
+              itemValue = "NA";
+            }
+            html += `<tr><td><strong>${itemKey}</strong></td><td>${itemValue}</td></tr>`;
+          }
+        }
+        html += `</table>`;
+
+        const allItemsElement = document.getElementById("allItems");
+        if (allItemsElement) {
+          allItemsElement.innerHTML = html;
+        } else {
+          console.error("Element with id 'allItems' not found.");
+        }
+      } else {
+        alert(`No data found for the selected university.`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("An error occurred while fetching the item.");
+    }
+  };
+  //@ts-ignore
+  private getProgInfo = async () => {
+    try {
+      const { selectedProgram } = this.state;
+      const prog: any[] = await this._sp.web.lists
+        .getByTitle("Program")
+        .items.filter(`Title eq '${selectedProgram}'`)
+        .select("ID", "Title", "Fees", "StemProgram")();
+      if (prog.length > 0) {
+        var html = `<div><strong>Program:</strong> ${prog[0].Title}</div>`;
+        html += `<div><strong>Fees:</strong> ${prog[0]["Fees"]}</div>`;
+        html += `<div><strong>STEM Program:</strong> ${prog[0].StemProgram}</div>`;
+        const allItemsElement = document.getElementById("allItems");
+        if (allItemsElement) {
+          allItemsElement.innerHTML = html;
+        } else {
+          console.error("Element with id 'All Items' not found.");
+        }
+      } else {
+        alert(`No data found for the selected program.`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("An error occurred while fetching the item.");
+    }
+  };
+
+  private getChanceOfAdmission(
+    userScore: number,
+    minEligibilityScore: number
+  ): string {
+    const scoreDifference = userScore - minEligibilityScore;
+    if (scoreDifference < -50) {
+      return "Very Low";
+    } else if (scoreDifference < 0) {
+      return "Low";
+    } else if (scoreDifference < 50) {
+      return "Medium";
+    } else {
+      return "High";
+    }
+  }
+
+  // Assuming this is inside your component class
+  // private calculateAndDisplayChanceOfAdmission = (userScore: number, minEligibilityScore: number) => {
+  //   const chanceOfAdmission = this.getChanceOfAdmission(userScore, minEligibilityScore);
+  //   console.log(chanceOfAdmission); // This will output the calculated chance of admission
+  // };
+}
+
+// function getChanceOfAdmission(
+//   userScore: number,
+//   minEligibilityScore: number
+// ): string {
+//   const scoreDifference = userScore - minEligibilityScore;
+//   if (scoreDifference < -50) {
+//     return "Very Low";
+//   } else if (scoreDifference < 0) {
+//     return "Low";
+//   } else if (scoreDifference < 50) {
+//     return "Medium";
+//   } else {
+//     return "High";
+//   }
+// }
+
+// const minEligibilityScore = 1200; // Assume this is the minimum eligibility score for a university
+// const userScore = 214; // Assume this is the user's score
+
+// const chanceOfAdmission = getChanceOfAdmission(userScore, minEligibilityScore);
+// console.log(chanceOfAdmission); // This will output "High Chance"
+// private getAllItems = async (pageNumber: number, itemsPerPage: number) => {
+  //   try {
+  //     const {
+  //       selectedCountry,
+  //       selectedCity,
+  //       includeIvyLeague,
+  //       STEMcourse,
+  //       selectedExpense,
+  //       selectedUniversityType,
+  //     } = this.state;
+  
+  //     let filterQuery = "";
+  
+  //     if (selectedCountry) {
+  //       filterQuery += `Country/Title eq '${selectedCountry}'`;
+  //     }
+  
+  //     if (selectedCity) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `City/Title eq '${selectedCity}'`;
+  //     }
+  
+  //     if (includeIvyLeague) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `Ivy eq 1`;
+  //     }
+  
+  //     if (STEMcourse) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `STEM eq 1`;
+  //     }
+  
+  //     if (selectedExpense) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `Expense eq '${selectedExpense}'`;
+  //     }
+  
+  //     if (selectedUniversityType) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `UniversityType eq '${selectedUniversityType}'`;
+  //     }
+  
+  //     // Calculate skip and top values for pagination
+  //     const skip = (pageNumber - 1) * itemsPerPage;
+  //     const top = itemsPerPage;
+  
+  //     let items: any[];
+  
+  //     if (filterQuery) {
+  //       items = await this._sp.web.lists
+  //         .getByTitle("Display_Uni_List")
+  //         .items.select(
+  //           "ID",
+  //           "University/Title",
+  //           "City/Title",
+  //           "Country/Title",
+  //           "Program_M/Title",
+  //           "Img_A",
+  //           "Uni_links",
+  //           "GlobalRanking",
+  //           "SATscore"
+  //         )
+  //         .expand("Country", "City", "University", "Program_M")
+  //         .filter(filterQuery)
+  //         .orderBy("GlobalRanking", true)
+  //         .top(top)
+  //         .skip(skip)();
+  //     } else {
+  //       items = await this._sp.web.lists
+  //         .getByTitle("Display_Uni_List")
+  //         .items.select(
+  //           "ID",
+  //           "University/Title",
+  //           "City/Title",
+  //           "Country/Title",
+  //           "Program_M/Title",
+  //           "Img_A",
+  //           "Uni_links",
+  //           "GlobalRanking",
+  //           "SATscore"
+  //         )
+  //         .expand("Country", "City", "University", "Program_M")
+  //         .orderBy("GlobalRanking", true)
+  //         .top(top)
+  //         .skip(skip)();
+  //     }
+  
+  //     console.log(items);
+  
+  //     // Update state with the fetched items and current page
+  //     this.setState({ items, currentPage: pageNumber });
+  
+  //     // Rest of your code for rendering items
+  //     //@ts-ignore
+  //     let chanceOfAdmission = "N/A"; // Default value
+  
+  //     if (items.length > 0) {
+  //       var html = `<style>
+  //       .tiles {
+  //         display: flex;
+  //         flex-wrap: wrap;
+  //         gap: 20px;
+  //         justify-content: center;
+  //         padding: 20px;
+  //       }
+  
+  //       .card {
+  //         width: calc(33.33% - 20px); /* Adjust this to make 3 cards fit in a row */
+  //         background: white;
+  //         padding: .4em;
+  //         border-radius: 6px;
+  //         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  //         transition: transform 0.2s, box-shadow 0.2s;
+  //       }
+  
+  //       .card:hover {
+  //         transform: translateY(-5px);
+  //         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  //       }
+  
+  //       .card-image {
+  //         background-color: rgb(236, 236, 236);
+  //         width: 100%;
+  //         height: 130px;
+  //         border-radius: 6px 6px 0 0;
+  //         object-fit: cover;
+  //         transition: transform 0.3s;
+  //       }
+  
+  //       .card-image:hover {
+  //         transform: scale(1.05);
+  //       }
+  
+  //       .category {
+  //         text-transform: uppercase;
+  //         font-size: 0.7em;
+  //         font-weight: 600;
+  //         color: rgb(63, 121, 230);
+  //         padding: 10px 7px 0;
+  //         display: block;
+  //       }
+  
+  //       .heading {
+  //         font-weight: 600;
+  //         color: rgb(88, 87, 87);
+  //         padding: 7px;
+  //         font-size: 1em;
+  //         height: 42px; /* Set the desired height */
+  //       }
+  
+  //       .shortlist-button {
+  //         position: relative;
+  //         width: 157px;
+  //         height: 40px;
+  //         cursor: pointer;
+  //         display: flex;
+  //         align-items: center;
+  //         border: 1px solid #34974d;
+  //         background-color: #3aa856;
+  //       }
+  
+  //       .shortlist-button, .button__icon, .button__text {
+  //         transition: all 0.3s;
+  //       }
+  
+  //       .shortlist-button .button__text {
+  //         transform: translateX(30px);
+  //         color: #fff;
+  //         font-weight: 600;
+  //       }
+  
+  //       .shortlist-button .button__icon {
+  //         position: absolute;
+  //         transform: translateX(109px);
+  //         height: 100%;
+  //         width: 39px;
+  //         background-color: #34974d;
+  //         display: flex;
+  //         align-items: center;
+  //         justify-content: center;
+  //       }
+  
+  //       .shortlist-button .svg {
+  //         width: 30px;
+  //         stroke: #fff;
+  //       }
+  
+  //       .shortlist-button:hover {
+  //         background: #34974d;
+  //       }
+  
+  //       .shortlist-button:hover .button__text {
+  //         color: transparent;
+  //       }
+  
+  //       .shortlist-button:hover .button__icon {
+  //         width: 148px;
+  //         transform: translateX(0);
+  //       }
+  
+  //       .shortlist-button:active .button__icon {
+  //         background-color: #2e8644;
+  //       }
+  
+  //       .shortlist-button:active {
+  //         border: 1px solid #2e8644;
+  //       }
+  
+  //       .buttonbox{
+  //         display: flex;
+  //         justify-content: center; /* Center horizontally */
+  //         position: relative; 
+  //       }
+  //     </style>
+      
+  //     <div class="tiles">
+  //     ${items
+  //       .map((item) => {
+  //         const universityTitle = item.University ? item.University.Title : "N/A";
+  //         const imageUrl = item.Img_A ? item.Img_A.Url : "";
+  //         const uniLink = item.Uni_links ? item.Uni_links.Url : "";
+  //         const globalRanking = item.GlobalRanking ? item.GlobalRanking : "N/A";
+  //         let SATscore = "N/A";
+    
+  //         // Check if SATscore field exists and is a number
+  //         if (item.SATscore && !isNaN(parseFloat(item.SATscore))) {
+  //           SATscore = item.SATscore;
+  //           let convertedSATScore =
+  //             this.state.convertedSATScore !== null
+  //               ? this.state.convertedSATScore.toString()
+  //               : "0";
+  //           chanceOfAdmission = this.getChanceOfAdmission(
+  //             parseFloat(convertedSATScore),
+  //             parseFloat(SATscore)
+  //           );
+  //         }
+    
+  //         // Logging the values before creating the button
+  //         console.log('Item ID:', item.ID);
+  //         console.log('University Title:', universityTitle);
+  //         console.log('Program Title:', item.Program_M ? item.Program_M.Title : 'N/A');
+    
+  //         return `
+  //           <div class="card">
+  //             <a href="${uniLink}" target="_blank" rel="noopener noreferrer">
+  //               <img src="${imageUrl}" alt="University Image" class="card-image" />
+  //               <div class="category">Rank: ${globalRanking}</div>
+  //               <div class="heading" height="40px" >${universityTitle}</div>
+  //             </a>
+  //             <div class="buttonbox">
+  //               <button type="button" class="shortlist-button" data-id="${item.ID}" data-university="${universityTitle}" data-program="${item.Program_M ? item.Program_M.Title : 'N/A'}">
+  //                 <span class="button__text">Shortlist</span>
+  //                 <span class="button__icon">
+  //                   <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke="currentColor" height="24" fill="none" class="svg">
+  //                     <line y2="19" y1="5" x2="12" x1="12"></line>
+  //                     <line y2="12" y1="12" x2="19" x1="5"></line>
+  //                   </svg>
+  //                 </span>
+  //               </button>
+  //             </div>
+  //           </div>`;
+  //       })
+  //       .join("")}
+  //   </div>`;
+  
+  //   const allItemsElement = document.getElementById("allItems");
+  //   if (allItemsElement) {
+  //     allItemsElement.innerHTML = html;
+  
+  //     // Add event listener to shortlist button
+  //     document.querySelectorAll(".shortlist-button").forEach((button) => {
+  //       button.addEventListener("click", async (event) => {
+  //         const id = (event.target as HTMLElement).getAttribute("data-id");
+  //         const university = (event.target as HTMLElement).getAttribute(
+  //           "data-university"
+  //         );
+  //         const program = (event.target as HTMLElement).getAttribute(
+  //           "data-program"
+  //         );
+  
+  //         console.log("Shortlist button clicked for ID:", id);
+  //         if (!id || !university || !program) {
+  //           console.error("ID or university is missing from button dataset.");
+  //           alert("Error: ID or university is missing from button dataset.");
+  //           return;
+  //         }
+  //         await this.shortlistUniversity(id, university, program);
+  //       });
+  //     });
+  //   } else {
+  //     console.error('Element with ID "allItems" not found.');
+  //   }
+  
+  //     } else {
+  //       console.log("No items found with the selected filters.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching items:", error);
+  //   }
+  // };
+    // Filter By public and private
   // private getAllItems = async () => {
 
   //   try {
@@ -777,346 +1488,338 @@ export default class Results extends React.Component<
   // };
 
   //With Pagination
-  private getAllItems = async (pageNumber: number, itemsPerPage: number) => {
-    try {
-      const {
-        selectedCountry,
-        selectedCity,
-        includeIvyLeague,
-        STEMcourse,
-        selectedExpense,
-        selectedUniversityType,
-      } = this.state;
+  // private getAllItems = async (pageNumber: number, itemsPerPage: number) => {
+  //   try {
+  //     const {
+  //       selectedCountry,
+  //       selectedCity,
+  //       includeIvyLeague,
+  //       STEMcourse,
+  //       selectedExpense,
+  //       selectedUniversityType,
+  //     } = this.state;
 
-      let filterQuery = "";
+  //     let filterQuery = "";
 
-      if (selectedCountry) {
-        filterQuery += `Country/Title eq '${selectedCountry}'`;
-      }
+  //     if (selectedCountry) {
+  //       filterQuery += `Country/Title eq '${selectedCountry}'`;
+  //     }
 
-      if (selectedCity) {
-        filterQuery += filterQuery ? " and " : "";
-        filterQuery += `City/Title eq '${selectedCity}'`;
-      }
+  //     if (selectedCity) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `City/Title eq '${selectedCity}'`;
+  //     }
 
-      if (includeIvyLeague) {
-        filterQuery += filterQuery ? " and " : "";
-        filterQuery += `Ivy eq 1`;
-      }
+  //     if (includeIvyLeague) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `Ivy eq 1`;
+  //     }
 
-      if (STEMcourse) {
-        filterQuery += filterQuery ? " and " : "";
-        filterQuery += `STEM eq 1`;
-      }
+  //     if (STEMcourse) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `STEM eq 1`;
+  //     }
 
-      if (selectedExpense) {
-        filterQuery += filterQuery ? " and " : "";
-        filterQuery += `Expense eq '${selectedExpense}'`;
-      }
+  //     if (selectedExpense) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `Expense eq '${selectedExpense}'`;
+  //     }
 
-      if (selectedUniversityType) {
-        filterQuery += filterQuery ? " and " : "";
-        filterQuery += `UniversityType eq '${selectedUniversityType}'`;
-      }
+  //     if (selectedUniversityType) {
+  //       filterQuery += filterQuery ? " and " : "";
+  //       filterQuery += `UniversityType eq '${selectedUniversityType}'`;
+  //     }
 
-      // Calculate skip and top values for pagination
-      const skip = (pageNumber - 1) * itemsPerPage;
-      const top = itemsPerPage;
+  //     // Calculate skip and top values for pagination
+  //     const skip = (pageNumber - 1) * itemsPerPage;
+  //     const top = itemsPerPage;
 
-      let items: any[];
+  //     let items: any[];
 
-      if (filterQuery) {
-        items = await this._sp.web.lists
-          .getByTitle("Display_Uni_List")
-          .items.select(
-            "ID",
-            "University/Title",
-            "City/Title",
-            "Country/Title",
-            "Program_M/Title",
-            "Img_A",
-            "Uni_links",
-            "GlobalRanking",
-            "SATscore"
-          )
-          .expand("Country", "City", "University", "Program_M")
-          .filter(filterQuery)
-          .orderBy("GlobalRanking", true)
-          .top(top)
-          .skip(skip)();
-      } else {
-        items = await this._sp.web.lists
-          .getByTitle("Display_Uni_List")
-          .items.select(
-            "ID",
-            "University/Title",
-            "City/Title",
-            "Country/Title",
-            "Program_M/Title",
-            "Img_A",
-            "Uni_links",
-            "GlobalRanking",
-            "SATscore"
-          )
-          .expand("Country", "City", "University", "Program_M")
-          .orderBy("GlobalRanking", true)
-          .top(top)
-          .skip(skip)();
-      }
+  //     if (filterQuery) {
+  //       items = await this._sp.web.lists
+  //         .getByTitle("Display_Uni_List")
+  //         .items.select(
+  //           "ID",
+  //           "University/Title",
+  //           "City/Title",
+  //           "Country/Title",
+  //           "Program_M/Title",
+  //           "Img_A",
+  //           "Uni_links",
+  //           "GlobalRanking",
+  //           "SATscore"
+  //         )
+  //         .expand("Country", "City", "University", "Program_M")
+  //         .filter(filterQuery)
+  //         .orderBy("GlobalRanking", true)
+  //         .top(top)
+  //         .skip(skip)();
+  //     } else {
+  //       items = await this._sp.web.lists
+  //         .getByTitle("Display_Uni_List")
+  //         .items.select(
+  //           "ID",
+  //           "University/Title",
+  //           "City/Title",
+  //           "Country/Title",
+  //           "Program_M/Title",
+  //           "Img_A",
+  //           "Uni_links",
+  //           "GlobalRanking",
+  //           "SATscore"
+  //         )
+  //         .expand("Country", "City", "University", "Program_M")
+  //         .orderBy("GlobalRanking", true)
+  //         .top(top)
+  //         .skip(skip)();
+  //     }
 
-      console.log(items);
+  //     console.log(items);
 
-      // Update state with the fetched items and current page
-      this.setState({ items, currentPage: pageNumber });
+  //     // Update state with the fetched items and current page
+  //     this.setState({ items, currentPage: pageNumber });
 
-      // Rest of your code for rendering items
-      let chanceOfAdmission = "N/A"; // Default value
+  //     // Rest of your code for rendering items
+  //     //@ts-ignore
+  //     let chanceOfAdmission = "N/A"; // Default value
 
-      if (items.length > 0) {
-        var html = `<style>
-                    .tiles {
-                      display: grid;
-                      grid-template-columns: repeat(3, 1fr);
-                      gap: 20px;
-                    }
-                    .tile {
-                      position: relative;
-                      border: 1px solid #ddd;
-                      border-radius: 5px;
-                      padding: 10px;
-                      box-sizing: border-box;
-                      text-align: center;
-                    }
-                    .tile-image {
-                      width: 100%;
-                      height: auto;
-                      border-radius: 5px;
-                      cursor: pointer;
-                    }
-                    .tile-title {
-                      font-weight: bold;
-                      margin-top: 5px;
-                    }
-                    .tile-ranking {
-                      margin-top: 5px;
-                    }
-                    .shortlist-button {
-                      background-color: #0078d4;
-                      color: #fff;
-                      border: none;
-                      border-radius: 3px;
-                      padding: 5px 10px;
-                      cursor: pointer;
-                    }
-                  </style>
-                  <div class="tiles">`;
+  //     if (items.length > 0) {
+  //       var html = `<style>
+  //       .tiles {
+  //         display: flex;
+  //         flex-wrap: wrap;
+  //         gap: 20px;
+  //         justify-content: center;
+  //         padding: 20px;
+  //       }
+      
+  //       .card {
+  //         width: 190px;
+  //         background: white;
+  //         padding: .4em;
+  //         border-radius: 6px;
+  //         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  //         transition: transform 0.2s, box-shadow 0.2s;
+  //       }
+      
+  //       .card:hover {
+  //         transform: translateY(-5px);
+  //         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  //       }
+      
+  //       .card-image {
+  //         background-color: rgb(236, 236, 236);
+  //         width: 100%;
+  //         height: 130px;
+  //         border-radius: 6px 6px 0 0;
+  //         object-fit: cover;
+  //         transition: transform 0.3s;
+  //       }
+      
+  //       .card-image:hover {
+  //         transform: scale(1.05);
+  //       }
+      
+  //       .category {
+  //         text-transform: uppercase;
+  //         font-size: 0.7em;
+  //         font-weight: 600;
+  //         color: rgb(63, 121, 230);
+  //         padding: 10px 7px 0;
+  //         display: block;
+  //       }
+      
+  //       .heading {
+  //         font-weight: 600;
+  //         color: rgb(88, 87, 87);
+  //         padding: 7px;
+  //         font-size: 1em;
+  //       }
+      
+  //       .author {
+  //         color: gray;
+  //         font-weight: 400;
+  //         font-size: 0.8em;
+  //         padding-top: 10px;
+  //       }
+      
+  //       .name {
+  //         font-weight: 600;
+  //         cursor: pointer;
+  //         color: #0078d4;
+  //       }
+      
+  //       .shortlist-button {
+  //         position: relative;
+  //         width: 157px;
+  //         height: 40px;
+  //         cursor: pointer;
+  //         display: flex;
+  //         align-items: center;
+  //         border: 1px solid #34974d;
+  //         background-color: #3aa856;
+  //       }
+        
+  //       .shortlist-button, .button__icon, .button__text {
+  //         transition: all 0.3s;
+  //       }
+        
+  //       .shortlist-button .button__text {
+  //         transform: translateX(30px);
+  //         color: #fff;
+  //         font-weight: 600;
+  //       }
+        
+  //       .shortlist-button .button__icon {
+  //         position: absolute;
+  //         transform: translateX(109px);
+  //         height: 100%;
+  //         width: 39px;
+  //         background-color: #34974d;
+  //         display: flex;
+  //         align-items: center;
+  //         justify-content: center;
+  //       }
+        
+  //       .shortlist-button .svg {
+  //         width: 30px;
+  //         stroke: #fff;
+  //       }
+        
+  //       .shortlist-button:hover {
+  //         background: #34974d;
+  //       }
+        
+  //       .shortlist-button:hover .button__text {
+  //         color: transparent;
+  //       }
+        
+  //       .shortlist-button:hover .button__icon {
+  //         width: 148px;
+  //         transform: translateX(0);
+  //       }
+        
+  //       .shortlist-button:active .button__icon {
+  //         background-color: #2e8644;
+  //       }
+        
+  //       .shortlist-button:active {
+  //         border: 1px solid #2e8644;
+  //       }
 
-        items.forEach((item, index) => {
-          const universityTitle = item.University
-            ? item.University.Title
-            : "N/A";
-          const imageUrl = item.Img_A ? item.Img_A.Url : "";
-          const uniLink = item.Uni_links ? item.Uni_links.Url : "";
-          const globalRanking = item.GlobalRanking ? item.GlobalRanking : "N/A";
-          let SATscore = "N/A";
+  //       .buttonbox{
+  //         display: flex;
+  //         justify-content: center; /* Center horizontally */
+  //         position: relative; /*
+  //       }
+  //     </style>
+      
+  //     <div class="tiles">
+  //       ${items
+  //         .map((item) => {
+  //           const universityTitle = item.University ? item.University.Title : "N/A";
+  //           const imageUrl = item.Img_A ? item.Img_A.Url : "";
+  //           const uniLink = item.Uni_links ? item.Uni_links.Url : "";
+  //           const globalRanking = item.GlobalRanking ? item.GlobalRanking : "N/A";
+  //           let SATscore = "N/A";
+      
+  //           // Check if SATscore field exists and is a number
+  //           if (item.SATscore && !isNaN(parseFloat(item.SATscore))) {
+  //             SATscore = item.SATscore;
+  //             let convertedSATScore =
+  //               this.state.convertedSATScore !== null
+  //                 ? this.state.convertedSATScore.toString()
+  //                 : "0";
+  //             chanceOfAdmission = this.getChanceOfAdmission(
+  //               parseFloat(convertedSATScore),
+  //               parseFloat(SATscore)
+  //             );
+  //           }
+      
+  //           return `
+  //             <div class="card">
+  //               <a href="${uniLink}" target="_blank" rel="noopener noreferrer">
+  //                 <img src="${imageUrl}" alt="University Image" class="card-image" />
+  //                 <div class="category">Rank: ${globalRanking}</div>
+  //                 <div class="heading">${universityTitle}</div>
+  //               </a>
+  //               <div class="buttonbox">
+  //               <button type="button" class="shortlist-button" data-id="${item.ID}" data-university="${universityTitle}" data-program="${item.Program_M.Title}">
+  //               <span class="button__text">Shortlist</span>
+  //               <span class="button__icon">
+  //                 <svg xmlns="http://www.w3.org/2000/svg" width="24" viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke="currentColor" height="24" fill="none" class="svg">
+  //                   <line y2="19" y1="5" x2="12" x1="12"></line>
+  //                   <line y2="12" y1="12" x2="19" x1="5"></line>
+  //                 </svg>
+  //               </span>
+  //             </button>
+  //             </div>
+              
+  //               </div>`;
+  //         })
+  //         .join("")}
+  //     </div>
+  //     `;
+      
+  //       // html += `</div>`;
+  //       const allItemsElement = document.getElementById("allItems");
+  //       if (allItemsElement) {
+  //         allItemsElement.innerHTML = html;
 
-          // Check if SATscore field exists and is a number
-          if (item.SATscore && !isNaN(parseFloat(item.SATscore))) {
-            SATscore = item.SATscore;
-            // chanceOfAdmission = this.getChanceOfAdmission(
-            //   1400,
-            //   parseFloat(SATscore)
-            // );
-            let convertedSATScore =
-              this.state.convertedSATScore !== null
-                ? this.state.convertedSATScore.toString()
-                : "0";
-            chanceOfAdmission = this.getChanceOfAdmission(
-              parseFloat(convertedSATScore),
-              parseFloat(SATscore)
-            );
-            // chanceOfAdmission = this.getChanceOfAdmission(parseFloat(this.state.convertedSATScore), parseFloat(SATscore));
-          }
-          html += `
-                      <div class="tile">
-                        <a href="${uniLink}" target="_blank" rel="noopener noreferrer">
-                          <img src="${imageUrl}" alt="Image2" class="tile-image" />
-                          <div class="tile-title">${universityTitle}</div>
-                          <div class="tile-ranking">Rank: ${globalRanking}</div>
-                          <div class="tile-eligibility">SAT Score: ${SATscore}</div>
-                          <div class="tile-eligibility">Chance of Admission: ${chanceOfAdmission}</div>
-              </a>
-                        <button class="shortlist-button" data-id="${item.ID}" data-university="${universityTitle}" data-program="${item.Program_M.Title}">Shortlist</button>
-                      </div>`;
-        });
-
-        html += `</div>`;
-        const allItemsElement = document.getElementById("allItems");
-        if (allItemsElement) {
-          allItemsElement.innerHTML = html;
-
-          // Add event listener to shortlist button
-          document.querySelectorAll(".shortlist-button").forEach((button) => {
-            button.addEventListener("click", async (event) => {
-              const target = event.target as HTMLElement;
-              const id = target.dataset.id;
-              const university = target.dataset.university;
-              let program = target.dataset.program || "";
-              if (id && university) {
-                await this.shortlistUniversity(id, university, program);
-              } else {
-                console.error(
-                  "ID, university, or program is missing from button dataset."
-                );
-              }
-            });
-          });
-        } else {
-          console.error("Element with id 'allItems' not found.");
-        }
-      } else {
-        this.undoRead();
-        alert(`No items found.`);
-      }
-    } catch (e) {
-      console.error(e);
-      alert("An error occurred while fetching items.");
-    }
-  };
-
-  private undoRead = () => {
-    this.setState({ items: [] });
-    const allItemsElement = document.getElementById("allItems");
-    if (allItemsElement) {
-      allItemsElement.innerHTML = "";
-    } else {
-      console.error("Element with id 'All Items' not found.");
-    }
-  };
-  //@ts-ignore
-  private getUniInfo = async () => {
-    try {
-      const { selectedUniversity } = this.state;
-      const uni: any[] = await this._sp.web.lists
-        .getByTitle("University")
-        .items.filter(`Title eq '${selectedUniversity}'`)
-        .select(
-          "ID",
-          "Title",
-          "City",
-          "Expense",
-          "GlobalRank",
-          "TotalEnrollment",
-          "Undergraduates",
-          "FinancialAid",
-          "PellGrant",
-          "StudentLoans",
-          "AverageDebt",
-          "Applicants",
-          "Accepted",
-          "Enrolled",
-          "ReturningFreshmen",
-          "Academics",
-          "Social",
-          "QualityOfLife",
-          "Admission"
-        )();
-
-      if (uni.length > 0) {
-        let html = `<table>`;
-        for (const itemKey in uni[0]) {
-          if (uni[0].hasOwnProperty(itemKey)) {
-            let itemValue = uni[0][itemKey];
-            if (itemValue === undefined || itemValue === null) {
-              itemValue = "NA";
-            }
-            html += `<tr><td><strong>${itemKey}</strong></td><td>${itemValue}</td></tr>`;
-          }
-        }
-        html += `</table>`;
-
-        const allItemsElement = document.getElementById("allItems");
-        if (allItemsElement) {
-          allItemsElement.innerHTML = html;
-        } else {
-          console.error("Element with id 'allItems' not found.");
-        }
-      } else {
-        alert(`No data found for the selected university.`);
-      }
-    } catch (e) {
-      console.error(e);
-      alert("An error occurred while fetching the item.");
-    }
-  };
-  //@ts-ignore
-  private getProgInfo = async () => {
-    try {
-      const { selectedProgram } = this.state;
-      const prog: any[] = await this._sp.web.lists
-        .getByTitle("Program")
-        .items.filter(`Title eq '${selectedProgram}'`)
-        .select("ID", "Title", "Fees", "StemProgram")();
-      if (prog.length > 0) {
-        var html = `<div><strong>Program:</strong> ${prog[0].Title}</div>`;
-        html += `<div><strong>Fees:</strong> ${prog[0]["Fees"]}</div>`;
-        html += `<div><strong>STEM Program:</strong> ${prog[0].StemProgram}</div>`;
-        const allItemsElement = document.getElementById("allItems");
-        if (allItemsElement) {
-          allItemsElement.innerHTML = html;
-        } else {
-          console.error("Element with id 'All Items' not found.");
-        }
-      } else {
-        alert(`No data found for the selected program.`);
-      }
-    } catch (e) {
-      console.error(e);
-      alert("An error occurred while fetching the item.");
-    }
-  };
-
-  private getChanceOfAdmission(
-    userScore: number,
-    minEligibilityScore: number
-  ): string {
-    const scoreDifference = userScore - minEligibilityScore;
-    if (scoreDifference < -50) {
-      return "Very Low";
-    } else if (scoreDifference < 0) {
-      return "Low";
-    } else if (scoreDifference < 50) {
-      return "Medium";
-    } else {
-      return "High";
-    }
-  }
-
-  // Assuming this is inside your component class
-  // private calculateAndDisplayChanceOfAdmission = (userScore: number, minEligibilityScore: number) => {
-  //   const chanceOfAdmission = this.getChanceOfAdmission(userScore, minEligibilityScore);
-  //   console.log(chanceOfAdmission); // This will output the calculated chance of admission
+  //         // Add event listener to shortlist button
+  //         document.querySelectorAll(".shortlist-button").forEach((button) => {
+  //           button.addEventListener("click", async (event) => {
+  //             const target = event.target as HTMLElement;
+  //             const id = target.dataset.id;
+  //             const university = target.dataset.university;
+  //             let program = target.dataset.program || "";
+  //             if (id && university) {
+  //               await this.shortlistUniversity(id, university, program);
+  //             } else {
+  //               console.error(
+  //                 "ID, university, or program is missing from button dataset."
+  //               );
+  //             }
+  //           });
+  //         });
+  //       } else {
+  //         console.error("Element with id 'allItems' not found.");
+  //       }
+  //     } else {
+  //       this.undoRead();
+  //       alert(`No items found.`);
+  //     }
+  //   } catch (e) {
+  //     console.error(e);
+  //     alert("An error occurred while fetching items.");
+  //   }
   // };
-}
 
-// function getChanceOfAdmission(
-//   userScore: number,
-//   minEligibilityScore: number
-// ): string {
-//   const scoreDifference = userScore - minEligibilityScore;
-//   if (scoreDifference < -50) {
-//     return "Very Low";
-//   } else if (scoreDifference < 0) {
-//     return "Low";
-//   } else if (scoreDifference < 50) {
-//     return "Medium";
-//   } else {
-//     return "High";
-//   }
-// }
+  // private shortlistCourse = async () => {
+  //   try {
+  //     const { selectedUniversity, selectedProgram } = this.state;
+  //     let program = selectedProgram || ""; // If no program selected, use blank value
+  //     if (!selectedUniversity) {
+  //       alert("Please select a University before shortlisting.");
+  //       return;
+  //     }
 
-// const minEligibilityScore = 1200; // Assume this is the minimum eligibility score for a university
-// const userScore = 214; // Assume this is the user's score
+  //     // Get the current user
+  //     const user = await this._sp.web.currentUser();
+  //     console.log(`Current user: ${user.Title}`);
 
-// const chanceOfAdmission = getChanceOfAdmission(userScore, minEligibilityScore);
-// console.log(chanceOfAdmission); // This will output "High Chance"
+  //     // Add the item to the "Favourites" list with the titles and IDs
+  //     await this._sp.web.lists.getByTitle("Favourites").items.add({
+  //       Title: `Shortlisted ${selectedUniversity} - ${program}`,
+  //       University: selectedUniversity,
+  //       Program: program,
+  //       username: user.Title, // Add the user's title to the item
+  //     });
+
+  //     alert("Course has been successfully shortlisted!");
+  //   } catch (error) {
+  //     console.error("Error shortlisting course:", error);
+  //     alert("An error occurred while shortlisting the course.");
+  //   }
+  // };
