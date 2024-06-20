@@ -196,22 +196,197 @@ export default class Results extends React.Component<
     this.setState({ score: event.target.value });
   };
 
+  // private getShortlistedItems = async () => {
+  //   this.undoRead();
+
+  //   try {
+  //     // Fetch items from the Shortlisted list
+  //     const items: any[] = await this._sp.web.lists
+  //       .getByTitle("Shortlisted")
+  //       .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+
+  //     // Get the current user's title (assuming you have access to it)
+  //     const user = await this._sp.web.currentUser();
+  //     const currentUserTitle = user.Title; // Replace with the actual current user's title
+
+  //     // Generate HTML for the table
+  //     let html = `<div class="tiles-container">`;
+
+  //     let rowCounter = 0; // Counter to keep track of tiles in a row
+  //     items.forEach((item) => {
+  //       if (item.username === currentUserTitle) {
+  //         // Check if a new row should be started
+  //         if (rowCounter % 3 === 0) {
+  //           if (rowCounter !== 0) {
+  //             html += `</div>`; // Close the previous row
+  //           }
+  //           html += `<div class="tiles-row">`; // Start a new row
+  //         }
+
+  //         html += `
+  //   <div class="tile">
+  //     <div class="tile-header">
+  //       <h2>${item.University}</h2> <!-- University name as heading -->
+  //     </div>
+  //     <div class="tile-content">
+  //       <p>${item.Title}</p>
+  //     </div>
+  //     <div class="tile-footer">
+  //       <button class="delete-button" data-id="${item.ID}">Delete</button>
+  //       <button class="apply-button" data-id="${item.ID}">Apply</button>
+  //     </div>
+  //   </div>`;
+  //         rowCounter++;
+  //       }
+  //     });
+
+  //     html += `</div>`; // Close the last row
+
+  //     // Display the table inside the specified <div>
+  //     const allItemsElement = document.getElementById("allItems");
+  //     if (allItemsElement) {
+  //       allItemsElement.innerHTML = html;
+
+  //       // Add event listeners to delete and apply buttons
+  //       document.querySelectorAll(".delete-button").forEach((button) => {
+  //         button.addEventListener("click", async (event) => {
+  //           const target = event.target as HTMLElement;
+  //           const id = target.dataset.id;
+  //           if (id) {
+  //             await this.deleteItemFromShortlist(id);
+  //             alert("Item Deleted!");
+  //           } else {
+  //             console.error("ID is missing or undefined from button dataset.");
+  //           }
+  //         });
+  //       });
+
+  //       document.querySelectorAll(".apply-button").forEach((button) => {
+  //         button.addEventListener("click", async (event) => {
+  //           const target = event.target as HTMLElement;
+  //           const id = target.dataset.id;
+  //           if (id) {
+  //             await this.applyItem(id);
+  //             alert("Application folder created");
+  //           } else {
+  //             console.error("ID is missing or undefined from button dataset.");
+  //           }
+  //         });
+  //       });
+  //     } else {
+  //       console.error("Element with id 'allItems' not found.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching shortlisted items:", error);
+  //     // Optionally, display an error message or handle the error in another way
+  //   }
+  // };
   private getShortlistedItems = async () => {
     this.undoRead();
-
+  
     try {
       // Fetch items from the Shortlisted list
       const items: any[] = await this._sp.web.lists
         .getByTitle("Shortlisted")
         .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
-
+  
       // Get the current user's title (assuming you have access to it)
       const user = await this._sp.web.currentUser();
       const currentUserTitle = user.Title; // Replace with the actual current user's title
-
+  
       // Generate HTML for the table
-      let html = `<div class="tiles-container">`;
-
+      let html = `
+        <style>
+          .tiles-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+          }
+  
+          .tiles-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 20px;
+          }
+  
+          .tile {
+            background-color: #f7f7f7;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px; /* Adjust the width of the tile */
+          }
+  
+          .tile-header {
+            background-color: #f7f7f7;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+          }
+  
+          .tile-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+          }
+  
+          .tile-content {
+            padding: 20px;
+          }
+  
+          .tile-content p {
+            margin-bottom: 20px;
+          }
+  
+          .tile-footer {
+            background-color: #f7f7f7;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+          }
+  
+          .action-button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 2px;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+          }
+  
+          .delete-button {
+            background-color: #ff0000;
+            color: #ffffff;
+            border: none;
+          }
+  
+          .apply-button {
+            background-color: #007bff;
+            color: #ffffff;
+            border: 1px solid #007bff;
+          }
+  
+          .action-button:hover {
+            background-color: #0056b3;
+          }
+  
+          .action-button:active {
+            transform: scale(0.95);
+          }
+  
+          .action-button span {
+            position: relative;
+            z-index: 1;
+          }
+        </style>
+        <div class="tiles-container">
+          <div class="tiles-grid">
+      `;
+  
       let rowCounter = 0; // Counter to keep track of tiles in a row
       items.forEach((item) => {
         if (item.username === currentUserTitle) {
@@ -222,57 +397,34 @@ export default class Results extends React.Component<
             }
             html += `<div class="tiles-row">`; // Start a new row
           }
-
+  
           html += `
-    <div class="tile">
-      <div class="tile-header">
-        <h2>${item.University}</h2> <!-- University name as heading -->
-      </div>
-      <div class="tile-content">
-        <p>${item.Title}</p>
-      </div>
-      <div class="tile-footer">
-        <button class="delete-button" data-id="${item.ID}">Delete</button>
-        <button class="apply-button" data-id="${item.ID}">Apply</button>
-      </div>
-    </div>`;
+            <div class="tile" style="margin: 10px;">
+              <div class="tile-header">
+                <h2>${item.University}</h2>
+              </div>
+              <div class="tile-content">
+                <p>${item.Title}</p>
+              </div>
+              <div class="tile-footer">
+                <button class="action-button delete-button" data-id="${item.ID}">Delete</button>
+                <button class="action-button apply-button" data-id="${item.ID}">Apply</button>
+              </div>
+            </div>
+          `;
           rowCounter++;
         }
       });
-
-      html += `</div>`; // Close the last row
-
-      // Display the table inside the specified <div>
+  
+      html += `</div></div>`; // Close the last row and grid
+  
       const allItemsElement = document.getElementById("allItems");
       if (allItemsElement) {
         allItemsElement.innerHTML = html;
-
+  
         // Add event listeners to delete and apply buttons
-        document.querySelectorAll(".delete-button").forEach((button) => {
-          button.addEventListener("click", async (event) => {
-            const target = event.target as HTMLElement;
-            const id = target.dataset.id;
-            if (id) {
-              await this.deleteItemFromShortlist(id);
-              alert("Item Deleted!");
-            } else {
-              console.error("ID is missing or undefined from button dataset.");
-            }
-          });
-        });
-
-        document.querySelectorAll(".apply-button").forEach((button) => {
-          button.addEventListener("click", async (event) => {
-            const target = event.target as HTMLElement;
-            const id = target.dataset.id;
-            if (id) {
-              await this.applyItem(id);
-              alert("Item Applied!");
-            } else {
-              console.error("ID is missing or undefined from button dataset.");
-            }
-          });
-        });
+        this.addDeleteButtonListeners();
+        this.addApplyButtonListeners();
       } else {
         console.error("Element with id 'allItems' not found.");
       }
@@ -281,6 +433,37 @@ export default class Results extends React.Component<
       // Optionally, display an error message or handle the error in another way
     }
   };
+  
+  private addDeleteButtonListeners = () => {
+    document.querySelectorAll(".delete-button").forEach((button) => {
+      button.addEventListener("click", async (event) => {
+        const target = event.target as HTMLElement;
+        const id = target.dataset.id;
+        if (id) {
+          await this.deleteItemFromShortlist(id);
+          alert("Item Deleted!");
+        } else {
+          console.error("ID is missing or undefined from button dataset.");
+        }
+      });
+    });
+  };
+  
+  private addApplyButtonListeners = () => {
+    document.querySelectorAll(".apply-button").forEach((button) => {
+      button.addEventListener("click", async (event) => {
+        const target = event.target as HTMLElement;
+        const id = target.dataset.id;
+        if (id) {
+          await this.applyItem(id);
+          // alert("Item Applied!");
+        } else {
+          console.error("ID is missing or undefined from button dataset.");
+        }
+      });
+    });
+  };
+  
   //   private getShortlistedItems = async () => {
   //     try {
   //       // Fetch items from the Shortlisted list

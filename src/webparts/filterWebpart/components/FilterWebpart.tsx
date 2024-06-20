@@ -267,113 +267,419 @@ export default class FilterWebpart extends React.Component<
   };
 
 
-  private getShortlistedItems = async () => {
-    this.undoRead();
-    try {
-      // Fetch items from the Shortlisted list
-      const items: any[] = await this._sp.web.lists
-        .getByTitle("Shortlisted")
-        .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+  // private getShortlistedItems = async () => {
+  //   this.undoRead();
+  //   try {
+  //     // Fetch items from the Shortlisted list
+  //     const items: any[] = await this._sp.web.lists
+  //       .getByTitle("Shortlisted")
+  //       .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
 
-      // Get the current user's title (assuming you have access to it)
-      const user = await this._sp.web.currentUser();
-      const currentUserTitle = user.Title; // Replace with the actual current user's title
+  //     // Get the current user's title (assuming you have access to it)
+  //     const user = await this._sp.web.currentUser();
+  //     const currentUserTitle = user.Title; // Replace with the actual current user's title
 
-      // Generate HTML for the table
-      let html = `<div class="tiles-container">`;
+  //     // Generate HTML for the table
+  //     let html = `<div class="tiles-container">`;
 
-      let rowCounter = 0; // Counter to keep track of tiles in a row
-      items.forEach((item) => {
-        if (item.username === currentUserTitle) {
-          // Check if a new row should be started
-          if (rowCounter % 3 === 0) {
-            if (rowCounter !== 0) {
-              html += `</div>`; // Close the previous row
-            }
-            html += `<div class="tiles-row">`; // Start a new row
-          }
+  //     let rowCounter = 0; // Counter to keep track of tiles in a row
+  //     items.forEach((item) => {
+  //       if (item.username === currentUserTitle) {
+  //         // Check if a new row should be started
+  //         if (rowCounter % 3 === 0) {
+  //           if (rowCounter !== 0) {
+  //             html += `</div>`; // Close the previous row
+  //           }
+  //           html += `<div class="tiles-row">`; // Start a new row
+  //         }
 
-          html += `
-  <div class="tile">
-    <div class="tile-header">
-      <h2>${item.University}</h2> <!-- University name as heading -->
-    </div>
-    <div class="tile-content">
-      <p>${item.Title}</p>
-    </div>
-    <div class="tile-footer">
-      <button class="delete-button" data-id="${item.ID}">Delete</button>
-      <button class="apply-button" data-id="${item.ID}">Apply</button>
-    </div>
-  </div>`;
-          rowCounter++;
+  //         html += `
+  // <div class="tile">
+  //   <div class="tile-header">
+  //     <h2>${item.University}</h2> <!-- University name as heading -->
+  //   </div>
+  //   <div class="tile-content">
+  //     <p>${item.Title}</p>
+  //   </div>
+  //   <div class="tile-footer">
+  //     <button class="delete-button" data-id="${item.ID}">Delete</button>
+  //     <button class="apply-button" data-id="${item.ID}">Apply</button>
+  //   </div>
+  // </div>`;
+  //         rowCounter++;
+  //       }
+  //     });
+
+  //     html += `</div>`; // Close the last row
+
+  //     // Display the table inside the specified <div>
+  //     const allItemsElement = document.getElementById("allItems");
+  //     if (allItemsElement) {
+  //       allItemsElement.innerHTML = html;
+
+  //       // Add event listeners to delete and apply buttons
+  //       document.querySelectorAll(".delete-button").forEach((button) => {
+  //         button.addEventListener("click", async (event) => {
+  //           const target = event.target as HTMLElement;
+  //           const id = target.dataset.id;
+  //           if (id) {
+  //             await this.deleteItemFromShortlist(id);
+  //             alert("Item Deleted!");
+  //           } else {
+  //             console.error("ID is missing or undefined from button dataset.");
+  //           }
+  //         });
+  //       });
+
+  //       document.querySelectorAll(".apply-button").forEach((button) => {
+  //         button.addEventListener("click", async (event) => {
+  //           const target = event.target as HTMLElement;
+  //           const id = target.dataset.id;
+  //           if (id) {
+  //             await this.applyItem(id);
+  //             alert("Item Applied!");
+  //           } else {
+  //             console.error("ID is missing or undefined from button dataset.");
+  //           }
+  //         });
+  //       });
+  //     } else {
+  //       console.error("Element with id 'allItems' not found.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching shortlisted items:", error);
+  //     // Optionally, display an error message or handle the error in another way
+  //   }
+  // };
+  
+
+// private getShortlistedItems = async () => {
+//   this.undoRead();
+//   try {
+//     // Fetch items from the Shortlisted list
+//     const items: any[] = await this._sp.web.lists
+//      .getByTitle("Shortlisted")
+//      .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+
+//     // Get the current user's title (assuming you have access to it)
+//     const user = await this._sp.web.currentUser();
+//     const currentUserTitle = user.Title; // Replace with the actual current user's title
+
+//     // Generate HTML for the table
+//     let html = `<div class="tiles-container">`;
+
+//     let rowCounter = 0; // Counter to keep track of tiles in a row
+//     items.forEach((item) => {
+//       if (item.username === currentUserTitle) {
+//         // Check if a new row should be started
+//         if (rowCounter % 3 === 0) {
+//           if (rowCounter!== 0) {
+//             html += `</div>`; // Close the previous row
+//           }
+//           html += `<div class="tiles-row">`; // Start a new row
+//         }
+
+//         html += `
+//   <div class="tile" style="margin-right: 20px; padding: 20px;">
+//     <div class="tile-header" style="background-color: #f7f7f7; padding: 10px; border-bottom: 1px solid #ddd;">
+//       <h2 style="margin: 0;">${item.University}</h2> <!-- University name as heading -->
+//     </div>
+//     <div class="tile-content" style="padding: 20px;">
+//       <p style="margin-bottom: 20px;">${item.Title}</p>
+//     </div>
+//     <div class="tile-footer" style="background-color: #f7f7f7; padding: 10px; border-top: 1px solid #ddd;">
+//       <button class="delete-button" data-id="${item.ID}" style="margin-right: 10px;">Delete</button>
+//       <button class="apply-button" data-id="${item.ID}">Apply</button>
+//     </div>
+//   </div>`;
+//         rowCounter++;
+//       }
+//     });
+
+//     html += `</div>`; // Close the last row
+
+//     // Display the table inside the specified <div>
+//     const allItemsElement = document.getElementById("allItems");
+//     if (allItemsElement) {
+//       allItemsElement.innerHTML = html;
+
+//       // Add event listeners to delete and apply buttons
+//       document.querySelectorAll(".delete-button").forEach((button) => {
+//         button.addEventListener("click", async (event) => {
+//           const target = event.target as HTMLElement;
+//           const id = target.dataset.id;
+//           if (id) {
+//             await this.deleteItemFromShortlist(id);
+//             alert("Item Deleted!");
+//           } else {
+//             console.error("ID is missing or undefined from button dataset.");
+//           }
+//         });
+//       });
+
+//       document.querySelectorAll(".apply-button").forEach((button) => {
+//         button.addEventListener("click", async (event) => {
+//           const target = event.target as HTMLElement;
+//           const id = target.dataset.id;
+//           if (id) {
+//             await this.applyItem(id);
+//             alert("Item Applied!");
+//           } else {
+//             console.error("ID is missing or undefined from button dataset.");
+//           }
+//         });
+//       });
+//     } else {
+//       console.error("Element with id 'allItems' not found.");
+//     }
+//   } catch (error) {
+//     console.error("Error fetching shortlisted items:", error);
+//     // Optionally, display an error message or handle the error in another way
+//   }
+// };
+
+
+
+private getShortlistedItems = async () => {
+  this.undoRead();
+
+  try {
+    // Fetch items from the Shortlisted list
+    const items: any[] = await this._sp.web.lists
+      .getByTitle("Shortlisted")
+      .items.select("ID", "Title", "University", "username")(); // Include the "ID" field
+
+    // Get the current user's title (assuming you have access to it)
+    const user = await this._sp.web.currentUser();
+    const currentUserTitle = user.Title; // Replace with the actual current user's title
+
+    // Generate HTML for the table
+    let html = `
+      <style>
+        .tiles-container {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
         }
-      });
 
-      html += `</div>`; // Close the last row
+        .tiles-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two columns per row */
+  grid-gap: 20px;
+}
 
-      // Display the table inside the specified <div>
-      const allItemsElement = document.getElementById("allItems");
-      if (allItemsElement) {
-        allItemsElement.innerHTML = html;
+        .tile {
+          background-color: #f7f7f7;
+          border: 1px solid #ddd;
+          border-radius: 10px;
+          padding: 20px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          width: 300px; /* Adjust the width of the tile */
+        }
 
-        // Add event listeners to delete and apply buttons
-        document.querySelectorAll(".delete-button").forEach((button) => {
-          button.addEventListener("click", async (event) => {
-            const target = event.target as HTMLElement;
-            const id = target.dataset.id;
-            if (id) {
-              await this.deleteItemFromShortlist(id);
-              alert("Item Deleted!");
-            } else {
-              console.error("ID is missing or undefined from button dataset.");
-            }
-          });
-        });
+        .tile-header {
+          background-color: #f7f7f7;
+          padding: 10px;
+          border-bottom: 1px solid #ddd;
+        }
 
-        document.querySelectorAll(".apply-button").forEach((button) => {
-          button.addEventListener("click", async (event) => {
-            const target = event.target as HTMLElement;
-            const id = target.dataset.id;
-            if (id) {
-              await this.applyItem(id);
-              alert("Item Applied!");
-            } else {
-              console.error("ID is missing or undefined from button dataset.");
-            }
-          });
-        });
-      } else {
-        console.error("Element with id 'allItems' not found.");
+        .tile-header h2 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: bold;
+        }
+
+        .tile-content {
+          padding: 20px;
+        }
+
+        .tile-content p {
+          margin-bottom: 20px;
+        }
+
+        .tile-footer {
+          background-color: #f7f7f7;
+          padding: 10px;
+          border-top: 1px solid #ddd;
+          display: flex;
+          justify-content: space-between;
+        }
+
+        .action-button {
+          padding: 10px 20px;
+          border-radius: 5px;
+          cursor: pointer;
+          font-size: 14px;
+          text-transform: uppercase;
+          font-weight: 600;
+          letter-spacing: 2px;
+          overflow: hidden;
+          transition: background-color 0.3s, color 0.3s;
+        }
+
+        .delete-button {
+          background-color: #ff0000;
+          color: #ffffff;
+          border: none;
+        }
+
+        .apply-button {
+          background-color: #007bff;
+          color: #ffffff;
+          border: 1px solid #007bff;
+        }
+
+        .action-button:hover {
+          background-color: #0056b3;
+        }
+
+        .action-button:active {
+          transform: scale(0.95);
+        }
+
+        .action-button span {
+          position: relative;
+          z-index: 1;
+        }
+      </style>
+      <div class="tiles-container">
+        <div class="tiles-grid">
+    `;
+
+    let rowCounter = 0; // Counter to keep track of tiles in a row
+    items.forEach((item) => {
+      if (item.username === currentUserTitle) {
+        // Check if a new row should be started
+        if (rowCounter % 3 === 0) {
+          if (rowCounter !== 0) {
+            html += `</div>`; // Close the previous row
+          }
+          html += `<div class="tiles-row">`; // Start a new row
+        }
+
+        html += `
+          <div class="tile" style="margin: 10px;">
+            <div class="tile-header">
+              <h2>${item.University}</h2>
+            </div>
+            <div class="tile-content">
+              <p>${item.Title}</p>
+            </div>
+            <div class="tile-footer">
+              <button class="action-button delete-button" data-id="${item.ID}">Delete</button>
+              <button class="action-button apply-button" data-id="${item.ID}">Apply</button>
+            </div>
+          </div>
+        `;
+        rowCounter++;
       }
-    } catch (error) {
-      console.error("Error fetching shortlisted items:", error);
-      // Optionally, display an error message or handle the error in another way
+    });
+
+    html += `</div></div>`; // Close the last row and grid
+
+    const allItemsElement = document.getElementById("allItems");
+    if (allItemsElement) {
+      allItemsElement.innerHTML = html;
+
+      // Add event listeners to delete and apply buttons
+      this.addDeleteButtonListeners();
+      this.addApplyButtonListeners();
+    } else {
+      console.error("Element with id 'allItems' not found.");
     }
-  };
+  } catch (error) {
+    console.error("Error fetching shortlisted items:", error);
+    // Optionally, display an error message or handle the error in another way
+  }
+};
+
+private addDeleteButtonListeners = () => {
+  document.querySelectorAll(".delete-button").forEach((button) => {
+    button.addEventListener("click", async (event) => {
+      const target = event.target as HTMLElement;
+      const id = target.dataset.id;
+      if (id) {
+        await this.deleteItemFromShortlist(id);
+        alert("Item Deleted!");
+      } else {
+        console.error("ID is missing or undefined from button dataset.");
+      }
+    });
+  });
+};
+
+private addApplyButtonListeners = () => {
+  document.querySelectorAll(".apply-button").forEach((button) => {
+    button.addEventListener("click", async (event) => {
+      const target = event.target as HTMLElement;
+      const id = target.dataset.id;
+      if (id) {
+        await this.applyItem(id);
+        // alert("Item Applied!");
+      } else {
+        console.error("ID is missing or undefined from button dataset.");
+      }
+    });
+  });
+};
 
 
+  // private applyItem = async (id: string) => {
+  //   try {
+  //     // Convert the id to a number
+  //     const itemId = parseInt(id, 10);
+
+  //     // Get the item from the "Shortlisted" list
+  //     const item = await this._sp.web.lists
+  //       .getByTitle("Shortlisted")
+  //       .items.getById(itemId)();
+
+  //     // Add the item to the "ApplicationList"
+  //     await this._sp.web.lists.getByTitle("ApplicationList").items.add({
+  //       Title: item.ID.toString(),
+  //       username: item.username,
+  //       UniversityName: item.University,
+  //     });
+  //     console.log(`Item with ID: ${id} applied to ApplicationList.`);
+  //   } catch (error) {
+  //     console.error(`Error applying item with ID: ${id}`, error);
+  //   }
+  // };
   private applyItem = async (id: string) => {
     try {
-      // Convert the id to a number
-      const itemId = parseInt(id, 10);
+        // Convert the id to a number
+        const itemId = parseInt(id, 10);
 
-      // Get the item from the "Shortlisted" list
-      const item = await this._sp.web.lists
-        .getByTitle("Shortlisted")
-        .items.getById(itemId)();
+        // Get the item from the "Shortlisted" list
+        const item = await this._sp.web.lists
+            .getByTitle("Shortlisted")
+            .items.getById(itemId)();
 
-      // Add the item to the "ApplicationList"
-      await this._sp.web.lists.getByTitle("ApplicationList").items.add({
-        Title: item.ID.toString(),
-        username: item.username,
-        UniversityName: item.University,
-      });
-      console.log(`Item with ID: ${id} applied to ApplicationList.`);
+        // Check if an item with the same details already exists in the "ApplicationList"
+        const existingItem = await this._sp.web.lists.getByTitle("ApplicationList")
+            .items
+            .select("ID")
+            .filter(`username eq '${item.username}' and UniversityName eq '${item.University}'`)
+            (); // Use .get() to retrieve the results
+
+        // If an item with the same details already exists, show an error
+        if (existingItem.length > 0) {
+            console.error(`Item with ID: ${id} already exists in ApplicationList.`);
+            return;
+        }
+
+        // Add the item to the "ApplicationList"
+        await this._sp.web.lists.getByTitle("ApplicationList").items.add({
+            Title: item.ID.toString(),
+            username: item.username,
+            UniversityName: item.University,
+        });
+        console.log(`Item with ID: ${id} applied to ApplicationList.`);
     } catch (error) {
-      console.error(`Error applying item with ID: ${id}`, error);
+        console.error(`Error applying item with ID: ${id}`, error);
     }
-  };
+};
+
 
   private deleteItemFromShortlist = async (id: string) => {
     try {
